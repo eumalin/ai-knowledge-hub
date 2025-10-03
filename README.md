@@ -1,5 +1,7 @@
 # AI-Powered Knowledge Collaboration Platform
 
+![CI](https://github.com/eumalin/ai-knowledge-hub/actions/workflows/ci.yml/badge.svg)
+
 A full-stack AI-powered platform for collaborative knowledge management. Upload documents, ask questions, and get intelligent responses powered by AI.
 
 ## 🚀 Features
