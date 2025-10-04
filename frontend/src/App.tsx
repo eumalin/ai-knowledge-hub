@@ -1,7 +1,119 @@
+import { useState } from 'react';
+
+interface Document {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: Date;
+}
+
 function App() {
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+
+  const handleAddDocument = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!title.trim() || !content.trim()) {
+      return;
+    }
+
+    const newDocument: Document = {
+      id: Date.now().toString(),
+      title: title.trim(),
+      content: content.trim(),
+      createdAt: new Date(),
+    };
+
+    setDocuments([...documents, newDocument]);
+    setTitle('');
+    setContent('');
+  };
+
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <h1 className="text-3xl font-bold">AI Knowledge Platform</h1>
+    <div className="min-h-screen bg-gray-100">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">
+          AI Knowledge Q&A Platform
+        </h1>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Document Input Form */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Add Document</h2>
+            <form onSubmit={handleAddDocument}>
+              <div className="mb-4">
+                <label
+                  htmlFor="title"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Document Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter document title"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label
+                  htmlFor="content"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Document Content
+                </label>
+                <textarea
+                  id="content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Paste your document content here..."
+                  rows={12}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Add Document
+              </button>
+            </form>
+          </div>
+
+          {/* Document List Placeholder */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">
+              Documents ({documents.length})
+            </h2>
+            {documents.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">
+                No documents yet. Add one to get started!
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="border border-gray-200 rounded p-4"
+                  >
+                    <h3 className="font-semibold text-gray-800">{doc.title}</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {doc.content.slice(0, 100)}
+                      {doc.content.length > 100 ? '...' : ''}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
