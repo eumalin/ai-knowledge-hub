@@ -1,30 +1,41 @@
-# AI-Powered Knowledge Collaboration Platform
+# AI-Powered Knowledge Q&A Platform
 
 ![CI](https://github.com/eumalin/ai-knowledge-hub/actions/workflows/ci.yml/badge.svg)
 
-A full-stack AI-powered platform for collaborative knowledge management. Upload documents, ask questions, and get intelligent responses powered by AI.
+A simple, secure AI Q&A platform. Paste your documents, ask questions, and get intelligent AI responses using your own OpenAI API key.
 
 ## 🚀 Features
-- Document upload and management
-- AI-powered Q&A using OpenAI embeddings
-- Multi-document querying
-- User authentication with JWT
-- Real-time chat interface
-- Responsive design
+- **Client-side document management** - Paste text documents, stored locally in browser
+- **AI-powered Q&A** - Ask questions, get context-aware answers using RAG (Retrieval-Augmented Generation)
+- **User-provided API keys** - Bring your own OpenAI API key, stored securely in browser
+- **Chat interface** - Conversational UI with message history
+- **Responsive design** - Works seamlessly on desktop and mobile
+- **Privacy-focused** - No backend storage, no user accounts, your data stays local
 
 ## 🛠 Tech Stack
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
-- **Backend**: FastAPI, Python 3.11+, PostgreSQL
-- **AI**: OpenAI embeddings, GPT for Q&A
+  - Client-side storage (localStorage)
+  - User-provided API key handling
+- **Backend**: FastAPI, Python 3.11+ (stateless)
+  - RAG pipeline (embeddings + similarity search + GPT)
+  - Rate limiting for abuse prevention
+- **AI**: OpenAI embeddings + GPT-4 (user's API key)
 - **Deployment**: Vercel (frontend), Render (backend)
 - **CI/CD**: GitHub Actions
+
+## 🏗 Architecture
+
+**Simplified MVP Design:**
+- ✅ No database - documents stored client-side only
+- ✅ No file uploads - text input only
+- ✅ Stateless backend - only processes AI requests
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+
 - Python 3.11+
-- PostgreSQL (for production)
+- OpenAI API key (get one at https://platform.openai.com)
 
 ### Frontend
 ```bash
