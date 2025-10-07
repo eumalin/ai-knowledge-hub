@@ -31,6 +31,10 @@ function App() {
     setContent('');
   };
 
+  const handleDeleteDocument = (id: string) => {
+    setDocuments(documents.filter((doc) => doc.id !== id));
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-8">
@@ -96,16 +100,30 @@ function App() {
                 No documents yet. Add one to get started!
               </p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[600px] overflow-y-auto">
                 {documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className="border border-gray-200 rounded p-4"
+                    className="border border-gray-200 rounded p-4 hover:border-gray-300 transition-colors"
                   >
-                    <h3 className="font-semibold text-gray-800">{doc.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-gray-800 flex-1">
+                        {doc.title}
+                      </h3>
+                      <button
+                        onClick={() => handleDeleteDocument(doc.id)}
+                        className="text-red-600 hover:text-red-800 text-sm ml-2"
+                        title="Delete document"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">
                       {doc.content.slice(0, 100)}
                       {doc.content.length > 100 ? '...' : ''}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {doc.content.length} characters
                     </p>
                   </div>
                 ))}
