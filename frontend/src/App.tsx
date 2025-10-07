@@ -80,16 +80,23 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">
-          AI Knowledge Q&A Platform
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+            AI Knowledge Q&A Platform
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            Store your documents locally and prepare for AI-powered Q&A
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Document Input Form */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Add Document</h2>
+          <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
+              Add Document
+            </h2>
             <form onSubmit={handleAddDocument}>
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
@@ -161,50 +168,70 @@ function App() {
           </div>
 
           {/* Document List */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
                 Documents ({documents.length})
               </h2>
               {documents.length > 0 && (
                 <button
                   onClick={handleClearAll}
-                  className="text-sm text-gray-600 hover:text-red-600"
+                  className="text-xs sm:text-sm text-gray-600 hover:text-red-600 transition-colors"
                 >
                   Clear All
                 </button>
               )}
             </div>
             {documents.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
-                No documents yet. Add one to get started!
-              </p>
+              <div className="text-center py-12 px-4">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400 mb-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <p className="text-gray-500 text-sm sm:text-base mb-2">
+                  No documents yet
+                </p>
+                <p className="text-gray-400 text-xs sm:text-sm">
+                  Add your first document to get started!
+                </p>
+              </div>
             ) : (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto">
+              <div className="space-y-3 sm:space-y-4 max-h-[500px] sm:max-h-[600px] overflow-y-auto pr-2">
                 {documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className="border border-gray-200 rounded p-4 hover:border-gray-300 transition-colors"
+                    className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-blue-300 hover:shadow-sm transition-all bg-gray-50"
                   >
                     <div className="flex justify-between items-start mb-2 gap-2">
-                      <h3 className="font-semibold text-gray-800 flex-1 break-all min-w-0">
+                      <h3 className="font-semibold text-gray-800 flex-1 break-all min-w-0 text-sm sm:text-base">
                         {doc.title}
                       </h3>
                       <button
                         onClick={() => handleDeleteDocument(doc.id)}
-                        className="text-red-600 hover:text-red-800 text-sm flex-shrink-0"
+                        className="text-red-600 hover:text-red-800 text-xs sm:text-sm flex-shrink-0 transition-colors px-2 py-1 hover:bg-red-50 rounded"
                         title="Delete document"
                       >
                         Delete
                       </button>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2 break-words">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2 break-words leading-relaxed">
                       {doc.content.slice(0, 100)}
                       {doc.content.length > 100 ? '...' : ''}
                     </p>
-                    <p className="text-xs text-gray-400">
-                      {doc.content.length} characters
-                    </p>
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <span>{doc.content.length.toLocaleString()} characters</span>
+                      <span>•</span>
+                      <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
                 ))}
               </div>
