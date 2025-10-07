@@ -1,16 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Document {
   id: string;
   title: string;
   content: string;
-  createdAt: Date;
+  createdAt: string;
 }
 
+const STORAGE_KEY = 'ai-knowledge-documents';
+
 function App() {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<Document[]>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  });
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+
+  // Save to localStorage whenever documents change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(documents));
+  }, [documents]);
 
   const handleAddDocument = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +33,7 @@ function App() {
       id: Date.now().toString(),
       title: title.trim(),
       content: content.trim(),
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     };
 
     setDocuments([...documents, newDocument]);
@@ -33,6 +43,12 @@ function App() {
 
   const handleDeleteDocument = (id: string) => {
     setDocuments(documents.filter((doc) => doc.id !== id));
+  };
+
+  const handleClearAll = () => {
+    if (confirm('Are you sure you want to delete all documents?')) {
+      setDocuments([]);
+    }
   };
 
   return (
@@ -90,11 +106,21 @@ function App() {
             </form>
           </div>
 
-          {/* Document List Placeholder */}
+          {/* Document List */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">
-              Documents ({documents.length})
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">
+                Documents ({documents.length})
+              </h2>
+              {documents.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="text-sm text-gray-600 hover:text-red-600"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
             {documents.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
                 No documents yet. Add one to get started!
