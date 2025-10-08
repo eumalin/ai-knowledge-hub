@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Tuple
@@ -74,8 +76,8 @@ def find_relevant_chunks(
     similarities = []
     for i, chunk_emb in enumerate(chunk_embeddings):
         similarity = cosine_similarity(question_embedding, chunk_emb)
-        doc_title, chunk_text = chunk_metadata[i]
-        similarities.append((doc_title, chunk_text, similarity))
+        doc_title, chunk_content = chunk_metadata[i]
+        similarities.append((doc_title, chunk_content, similarity))
 
     # Sort by similarity and return top_k
     similarities.sort(key=lambda x: x[2], reverse=True)
