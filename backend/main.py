@@ -1,9 +1,85 @@
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from openai import OpenAI
+import numpy as np
 
 app = FastAPI()
+
+
+def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
+    """Split text into chunks of roughly chunk_size characters."""
+    words = text.split()
+    chunks = []
+    current_chunk = []
+    current_size = 0
+
+    for word in words:
+        word_size = len(word) + 1  # +1 for space
+        if current_size + word_size > chunk_size and current_chunk:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [word]
+            current_size = word_size
+        else:
+            current_chunk.append(word)
+            current_size += word_size
+
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+
+    return chunks
+
+
+def cosine_similarity(a: List[float], b: List[float]) -> float:
+    """Calculate cosine similarity between two vectors."""
+    a_np = np.array(a)
+    b_np = np.array(b)
+    return float(np.dot(a_np, b_np) / (np.linalg.norm(a_np) * np.linalg.norm(b_np)))
+
+
+def get_embeddings(client: OpenAI, texts: List[str]) -> List[List[float]]:
+    """Get embeddings for a list of texts using OpenAI."""
+    response = client.embeddings.create(
+        model="text-embedding-ada-002",
+        input=texts
+    )
+    return [item.embedding for item in response.data]
+
+
+def find_relevant_chunks(
+    client: OpenAI,
+    documents: List[Document],
+    question: str,
+    top_k: int = 3
+) -> List[Tuple[str, str, float]]:
+    """
+    Find the most relevant chunks from documents for the given question.
+    Returns list of (doc_title, chunk_text, similarity_score) tuples.
+    """
+    # Chunk all documents
+    all_chunks = []
+    chunk_metadata = []  # (doc_title, chunk_text)
+
+    for doc in documents:
+        chunks = chunk_text(doc.content)
+        for chunk in chunks:
+            all_chunks.append(chunk)
+            chunk_metadata.append((doc.title, chunk))
+
+    # Get embeddings for question and all chunks
+    question_embedding = get_embeddings(client, [question])[0]
+    chunk_embeddings = get_embeddings(client, all_chunks)
+
+    # Calculate similarities
+    similarities = []
+    for i, chunk_emb in enumerate(chunk_embeddings):
+        similarity = cosine_similarity(question_embedding, chunk_emb)
+        doc_title, chunk_text = chunk_metadata[i]
+        similarities.append((doc_title, chunk_text, similarity))
+
+    # Sort by similarity and return top_k
+    similarities.sort(key=lambda x: x[2], reverse=True)
+    return similarities[:top_k]
 
 
 class Document(BaseModel):
@@ -59,18 +135,33 @@ async def ask_question(
     try:
         client = OpenAI(api_key=x_api_key)
 
-        # Simple GPT completion test
+        # Find relevant chunks using embeddings and similarity search
+        relevant_chunks = find_relevant_chunks(
+            client=client,
+            documents=request.documents,
+            question=request.question,
+            top_k=3
+        )
+
+        # Build context from relevant chunks
+        context = "\n\n".join([
+            f"From '{title}':\n{chunk}"
+            for title, chunk, score in relevant_chunks
+        ])
+
+        # Generate answer using GPT with relevant context
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a helpful assistant that answers questions about documents."
+                    "content": "You are a helpful assistant that answers questions based on the provided document excerpts. "
+                               "Only use information from the provided context to answer questions."
                 },
                 {
                     "role": "user",
-                    "content": f"Question: {request.question}\n\nDocuments:\n" +
-                               "\n\n".join([f"Title: {doc.title}\nContent: {doc.content}" for doc in request.documents])
+                    "content": f"Context:\n{context}\n\nQuestion: {request.question}\n\n"
+                               "Please answer the question based only on the context provided above."
                 }
             ],
             max_tokens=500,
@@ -78,11 +169,13 @@ async def ask_question(
         )
 
         answer = response.choices[0].message.content
-        doc_titles = [doc.title for doc in request.documents]
+
+        # Get unique document titles from relevant chunks
+        sources = list(set([title for title, _, _ in relevant_chunks]))
 
         return AskResponse(
             answer=answer,
-            sources=doc_titles
+            sources=sources
         )
 
     except Exception as e:
