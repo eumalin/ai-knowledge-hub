@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Chat from './Chat';
 
 interface Document {
   id: string;
@@ -11,6 +12,7 @@ const STORAGE_KEY = 'ai-knowledge-documents';
 const API_KEY_STORAGE_KEY = 'ai-knowledge-api-key';
 const MAX_TITLE_LENGTH = 100;
 const MAX_CONTENT_LENGTH = 50000;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 function App() {
   const [documents, setDocuments] = useState<Document[]>(() => {
@@ -311,6 +313,15 @@ function App() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Chat Section */}
+        <div className="mt-6">
+          <Chat
+            documents={documents}
+            apiKey={apiKey}
+            apiBaseUrl={API_BASE_URL}
+          />
         </div>
       </div>
     </div>
