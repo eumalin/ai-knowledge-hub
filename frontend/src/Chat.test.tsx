@@ -14,7 +14,7 @@ const mockDocuments = [
 
 describe('Chat', () => {
   beforeEach(() => {
-    global.fetch = vi.fn();
+    vi.stubGlobal('fetch', vi.fn());
   });
 
   it('renders chat interface', () => {
@@ -28,7 +28,14 @@ describe('Chat', () => {
   it('shows empty state when no messages', () => {
     render(<Chat documents={[]} apiKey="" apiBaseUrl="http://localhost:8000" />);
     expect(
-      screen.getByText('Ask a question about your documents to get started')
+      screen.getByText('Select documents using the checkboxes above, then ask questions')
+    ).toBeInTheDocument();
+  });
+
+  it('shows empty state with documents', () => {
+    render(<Chat documents={mockDocuments} apiKey="sk-test" apiBaseUrl="http://localhost:8000" />);
+    expect(
+      screen.getByText('Ask a question about your selected documents')
     ).toBeInTheDocument();
   });
 
@@ -67,10 +74,10 @@ describe('Chat', () => {
       sources: ['Test Document'],
     };
 
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
-    });
+    } as Response);
 
     render(
       <Chat
@@ -104,7 +111,7 @@ describe('Chat', () => {
   it('shows loading state while waiting for response', async () => {
     const user = userEvent.setup();
 
-    (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(
+    vi.mocked(fetch).mockImplementation(
       () =>
         new Promise((resolve) =>
           setTimeout(
@@ -112,7 +119,7 @@ describe('Chat', () => {
               resolve({
                 ok: true,
                 json: async () => ({ answer: 'Response', sources: [] }),
-              }),
+              } as Response),
             100
           )
         )
@@ -144,10 +151,10 @@ describe('Chat', () => {
   it('shows error message when API call fails', async () => {
     const user = userEvent.setup();
 
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    vi.mocked(fetch).mockResolvedValueOnce({
       ok: false,
       json: async () => ({ detail: 'API Error' }),
-    });
+    } as Response);
 
     render(
       <Chat
@@ -192,8 +199,8 @@ describe('Chat', () => {
     const mockFetch = vi.fn().mockResolvedValueOnce({
       ok: true,
       json: async () => ({ answer: 'Response', sources: [] }),
-    });
-    global.fetch = mockFetch;
+    } as Response);
+    vi.stubGlobal('fetch', mockFetch);
 
     render(
       <Chat

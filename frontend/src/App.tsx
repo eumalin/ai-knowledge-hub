@@ -27,6 +27,7 @@ function App() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [errors, setErrors] = useState({ title: '', content: '' });
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
 
   // Save to localStorage whenever documents change
   useEffect(() => {
@@ -116,8 +117,33 @@ function App() {
   const handleClearAll = () => {
     if (confirm('Are you sure you want to delete all documents?')) {
       setDocuments([]);
+      setSelectedDocIds(new Set());
     }
   };
+
+  const handleToggleDocument = (id: string) => {
+    setSelectedDocIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    setSelectedDocIds(new Set(documents.map((doc) => doc.id)));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedDocIds(new Set());
+  };
+
+  const selectedDocuments = documents.filter((doc) =>
+    selectedDocIds.has(doc.id)
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -245,17 +271,39 @@ function App() {
 
           {/* Document List */}
           <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-                Documents ({documents.length})
-              </h2>
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+                  Documents ({documents.length})
+                </h2>
+                {documents.length > 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    className="text-xs sm:text-sm text-gray-600 hover:text-red-600 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
               {documents.length > 0 && (
-                <button
-                  onClick={handleClearAll}
-                  className="text-xs sm:text-sm text-gray-600 hover:text-red-600 transition-colors"
-                >
-                  Clear All
-                </button>
+                <div className="flex gap-2 text-xs">
+                  <button
+                    onClick={handleSelectAll}
+                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-gray-400">|</span>
+                  <button
+                    onClick={handleDeselectAll}
+                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    Deselect All
+                  </button>
+                  <span className="text-gray-600 ml-2">
+                    ({selectedDocIds.size} selected for Q&A)
+                  </span>
+                </div>
               )}
             </div>
             {documents.length === 0 ? (
@@ -285,19 +333,34 @@ function App() {
                 {documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-blue-300 hover:shadow-sm transition-all bg-gray-50"
+                    className={`border rounded-lg p-3 sm:p-4 hover:shadow-sm transition-all ${
+                      selectedDocIds.has(doc.id)
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 bg-gray-50 hover:border-blue-300'
+                    }`}
                   >
-                    <div className="flex justify-between items-start mb-2 gap-2">
-                      <h3 className="font-semibold text-gray-800 flex-1 break-all min-w-0 text-sm sm:text-base">
-                        {doc.title}
-                      </h3>
-                      <button
-                        onClick={() => handleDeleteDocument(doc.id)}
-                        className="text-red-600 hover:text-red-800 text-xs sm:text-sm flex-shrink-0 transition-colors px-2 py-1 hover:bg-red-50 rounded"
-                        title="Delete document"
-                      >
-                        Delete
-                      </button>
+                    <div className="flex items-start gap-3 mb-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedDocIds.has(doc.id)}
+                        onChange={() => handleToggleDocument(doc.id)}
+                        className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                        title="Select for Q&A"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <h3 className="font-semibold text-gray-800 flex-1 break-all text-sm sm:text-base">
+                            {doc.title}
+                          </h3>
+                          <button
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            className="text-red-600 hover:text-red-800 text-xs sm:text-sm flex-shrink-0 transition-colors px-2 py-1 hover:bg-red-50 rounded"
+                            title="Delete document"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     <p className="text-xs sm:text-sm text-gray-600 mb-2 break-words leading-relaxed">
                       {doc.content.slice(0, 100)}
@@ -318,7 +381,7 @@ function App() {
         {/* Chat Section */}
         <div className="mt-6">
           <Chat
-            documents={documents}
+            documents={selectedDocuments}
             apiKey={apiKey}
             apiBaseUrl={API_BASE_URL}
           />

@@ -41,7 +41,7 @@ function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
     }
 
     if (documents.length === 0) {
-      setError('Please add at least one document');
+      setError('Please select at least one document to query');
       return;
     }
 
@@ -103,8 +103,10 @@ function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
       {/* Chat Messages */}
       <div className="mb-4 h-[400px] overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-            Ask a question about your documents to get started
+          <div className="flex items-center justify-center h-full text-gray-500 text-sm text-center px-4">
+            {documents.length === 0
+              ? 'Select documents using the checkboxes above, then ask questions'
+              : 'Ask a question about your selected documents'}
           </div>
         ) : (
           <div className="space-y-4">
