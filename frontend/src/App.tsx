@@ -12,6 +12,16 @@ const STORAGE_KEY = 'ai-knowledge-documents';
 const API_KEY_STORAGE_KEY = 'ai-knowledge-api-key';
 const MAX_TITLE_LENGTH = 100;
 const MAX_CONTENT_LENGTH = 50000;
+const MAX_FILE_SIZE = 1024 * 1024; // 1MB
+const ALLOWED_FILE_TYPES = [
+  'text/plain',
+  'text/markdown',
+  'application/json',
+  'text/csv',
+  'text/html',
+  'text/xml',
+];
+const ALLOWED_FILE_EXTENSIONS = ['.txt', '.md', '.json', '.csv', '.html', '.xml', '.log'];
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 function App() {
@@ -28,6 +38,7 @@ function App() {
   const [content, setContent] = useState('');
   const [errors, setErrors] = useState({ title: '', content: '' });
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+  const [fileError, setFileError] = useState('');
 
   // Save to localStorage whenever documents change
   useEffect(() => {
@@ -139,6 +150,57 @@ function App() {
 
   const handleDeselectAll = () => {
     setSelectedDocIds(new Set());
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setFileError('');
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      setFileError(`File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+      return;
+    }
+
+    // Validate file type
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (
+      !ALLOWED_FILE_TYPES.includes(file.type) &&
+      !ALLOWED_FILE_EXTENSIONS.includes(fileExtension)
+    ) {
+      setFileError(
+        `Invalid file type. Allowed: ${ALLOWED_FILE_EXTENSIONS.join(', ')}`
+      );
+      return;
+    }
+
+    // Read file content
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const fileContent = event.target?.result as string;
+
+      if (fileContent.length > MAX_CONTENT_LENGTH) {
+        setFileError(`File content must be less than ${MAX_CONTENT_LENGTH.toLocaleString()} characters`);
+        return;
+      }
+
+      // Extract filename without extension as title
+      const fileName = file.name.replace(/\.[^/.]+$/, '');
+      setTitle(fileName.slice(0, MAX_TITLE_LENGTH));
+      setContent(fileContent);
+      setErrors({ title: '', content: '' });
+    };
+
+    reader.onerror = () => {
+      setFileError('Failed to read file');
+    };
+
+    reader.readAsText(file);
+
+    // Reset the file input so the same file can be selected again
+    e.target.value = '';
   };
 
   const selectedDocuments = documents.filter((doc) =>
@@ -257,6 +319,47 @@ function App() {
                 />
                 {errors.content && (
                   <p className="text-red-600 text-sm mt-1">{errors.content}</p>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <div className="flex items-center justify-center w-full">
+                  <label
+                    htmlFor="file-upload"
+                    className="flex flex-col items-center justify-center w-full border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors p-4"
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      <svg
+                        className="w-8 h-8 mb-2 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <p className="text-sm text-gray-600 mb-1">
+                        <span className="font-semibold">Click to upload</span> a text file
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {ALLOWED_FILE_EXTENSIONS.join(', ')} (max {MAX_FILE_SIZE / 1024 / 1024}MB)
+                      </p>
+                    </div>
+                    <input
+                      id="file-upload"
+                      type="file"
+                      className="hidden"
+                      accept={ALLOWED_FILE_EXTENSIONS.join(',')}
+                      onChange={handleFileUpload}
+                    />
+                  </label>
+                </div>
+                {fileError && (
+                  <p className="text-red-600 text-sm mt-2">{fileError}</p>
                 )}
               </div>
 

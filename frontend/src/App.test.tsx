@@ -178,3 +178,84 @@ describe('App - API Key', () => {
     expect(screen.getByDisplayValue('sk-persistent-key')).toBeInTheDocument();
   });
 });
+
+describe('App - File Upload', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('renders file upload area with accept attribute', () => {
+    render(<App />);
+    expect(screen.getByText(/Click to upload/)).toBeInTheDocument();
+    expect(screen.getByText(/\.txt, \.md, \.json/)).toBeInTheDocument();
+
+    // Verify the file input has the accept attribute to filter files in the picker
+    const fileInput = document.querySelector('#file-upload') as HTMLInputElement;
+    expect(fileInput).toHaveAttribute('accept', '.txt,.md,.json,.csv,.html,.xml,.log');
+  });
+
+  it('uploads a valid text file', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const fileContent = 'This is a test file content';
+    const file = new File([fileContent], 'test-document.txt', { type: 'text/plain' });
+
+    const fileInput = screen.getByLabelText(/Click to upload/i) as HTMLInputElement;
+    await user.upload(fileInput, file);
+
+    // Title should be populated with filename (without extension)
+    expect(screen.getByDisplayValue('test-document')).toBeInTheDocument();
+    // Content should be populated
+    expect(screen.getByDisplayValue(fileContent)).toBeInTheDocument();
+  });
+
+  it('rejects file that is too large', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    // Create a file larger than 1MB
+    const largeContent = 'a'.repeat(1024 * 1024 + 1);
+    const file = new File([largeContent], 'large.txt', { type: 'text/plain' });
+
+    const fileInput = screen.getByLabelText(/Click to upload/i) as HTMLInputElement;
+    await user.upload(fileInput, file);
+
+    expect(screen.getByText(/File size must be less than 1MB/)).toBeInTheDocument();
+  });
+
+  it('rejects file with content too long', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    // Create a file with content longer than MAX_CONTENT_LENGTH (50,000)
+    const longContent = 'a'.repeat(50001);
+    const file = new File([longContent], 'long.txt', { type: 'text/plain' });
+
+    const fileInput = screen.getByLabelText(/Click to upload/i) as HTMLInputElement;
+    await user.upload(fileInput, file);
+
+    expect(screen.getByText(/File content must be less than 50,000 characters/)).toBeInTheDocument();
+  });
+
+  it('clears previous size error when uploading new valid file', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const fileInput = screen.getByLabelText(/Click to upload/i) as HTMLInputElement;
+
+    // First upload file that's too large
+    const largeContent = 'a'.repeat(1024 * 1024 + 1);
+    const largeFile = new File([largeContent], 'large.txt', { type: 'text/plain' });
+    await user.upload(fileInput, largeFile);
+
+    expect(screen.getByText(/File size must be less than 1MB/)).toBeInTheDocument();
+
+    // Then upload valid file
+    const validFile = new File(['valid content'], 'test.txt', { type: 'text/plain' });
+    await user.upload(fileInput, validFile);
+
+    expect(screen.queryByText(/File size must be less than 1MB/)).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('test')).toBeInTheDocument();
+  });
+});
