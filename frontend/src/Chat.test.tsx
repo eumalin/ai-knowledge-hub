@@ -194,6 +194,51 @@ describe('Chat', () => {
     expect(screen.getByText('Please enter a valid API key')).toBeInTheDocument();
   });
 
+  it('shows message when API key is missing', () => {
+    render(
+      <Chat
+        documents={mockDocuments}
+        apiKey=""
+        apiBaseUrl="http://localhost:8000"
+      />
+    );
+
+    expect(
+      screen.getByText(/Please enter your OpenAI API key above to ask questions/)
+    ).toBeInTheDocument();
+  });
+
+  it('shows message when no documents are selected', () => {
+    render(
+      <Chat
+        documents={[]}
+        apiKey="sk-test"
+        apiBaseUrl="http://localhost:8000"
+      />
+    );
+
+    expect(
+      screen.getByText(/Select at least one document using the checkboxes above/)
+    ).toBeInTheDocument();
+  });
+
+  it('hides info messages when requirements are met', () => {
+    render(
+      <Chat
+        documents={mockDocuments}
+        apiKey="sk-test"
+        apiBaseUrl="http://localhost:8000"
+      />
+    );
+
+    expect(
+      screen.queryByText(/Please enter your OpenAI API key/)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Select at least one document/)
+    ).not.toBeInTheDocument();
+  });
+
   it('sends correct request to API', async () => {
     const user = userEvent.setup();
     const mockFetch = vi.fn().mockResolvedValueOnce({

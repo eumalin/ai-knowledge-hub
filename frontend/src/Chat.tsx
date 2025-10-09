@@ -164,6 +164,22 @@ function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
         </div>
       )}
 
+      {/* Info Messages */}
+      {!apiKey && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800 text-sm">
+            ⚠️ Please enter your OpenAI API key above to ask questions
+          </p>
+        </div>
+      )}
+      {apiKey && documents.length === 0 && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-800 text-sm">
+            ℹ️ Select at least one document using the checkboxes above
+          </p>
+        </div>
+      )}
+
       {/* Question Input */}
       <form onSubmit={handleAskQuestion}>
         <div className="flex gap-2">
