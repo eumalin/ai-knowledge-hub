@@ -8,6 +8,7 @@ interface Document {
 }
 
 const STORAGE_KEY = 'ai-knowledge-documents';
+const API_KEY_STORAGE_KEY = 'ai-knowledge-api-key';
 const MAX_TITLE_LENGTH = 100;
 const MAX_CONTENT_LENGTH = 50000;
 
@@ -16,6 +17,11 @@ function App() {
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
   });
+  const [apiKey, setApiKey] = useState(() => {
+    return localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+  });
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [apiKeyError, setApiKeyError] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [errors, setErrors] = useState({ title: '', content: '' });
@@ -24,6 +30,38 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(documents));
   }, [documents]);
+
+  // Save API key to localStorage whenever it changes
+  useEffect(() => {
+    if (apiKey) {
+      localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
+    } else {
+      localStorage.removeItem(API_KEY_STORAGE_KEY);
+    }
+  }, [apiKey]);
+
+  const validateApiKey = (key: string): boolean => {
+    if (!key.trim()) {
+      setApiKeyError('API key is required');
+      return false;
+    }
+    if (!key.startsWith('sk-')) {
+      setApiKeyError('Invalid API key format. Must start with "sk-"');
+      return false;
+    }
+    setApiKeyError('');
+    return true;
+  };
+
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newKey = e.target.value;
+    setApiKey(newKey);
+    if (newKey.trim()) {
+      validateApiKey(newKey);
+    } else {
+      setApiKeyError('');
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors = { title: '', content: '' };
@@ -89,6 +127,42 @@ function App() {
           <p className="text-sm sm:text-base text-gray-600">
             Store your documents locally and prepare for AI-powered Q&A
           </p>
+        </div>
+
+        {/* API Key Input */}
+        <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6 mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
+            OpenAI API Key
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Your API key is stored locally in your browser and never sent to our servers.
+          </p>
+          <div className="relative">
+            <input
+              type={showApiKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={handleApiKeyChange}
+              placeholder="sk-..."
+              className={`w-full px-3 py-2 pr-24 border rounded-md focus:outline-none focus:ring-2 ${
+                apiKeyError
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-blue-500'
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowApiKey(!showApiKey)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600 hover:text-gray-800 px-3 py-1 rounded hover:bg-gray-100 transition-colors"
+            >
+              {showApiKey ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          {apiKeyError && (
+            <p className="text-red-600 text-sm mt-2">{apiKeyError}</p>
+          )}
+          {apiKey && !apiKeyError && (
+            <p className="text-green-600 text-sm mt-2">✓ Valid API key format</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">

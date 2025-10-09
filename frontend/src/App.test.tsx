@@ -120,3 +120,61 @@ describe('App - LocalStorage', () => {
     expect(screen.getByText('Persistent Doc')).toBeInTheDocument();
   });
 });
+
+describe('App - API Key', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('renders API key input', () => {
+    render(<App />);
+    expect(screen.getByText('OpenAI API Key')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('sk-...')).toBeInTheDocument();
+  });
+
+  it('validates API key format', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const apiKeyInput = screen.getByPlaceholderText('sk-...');
+
+    // Invalid key
+    await user.type(apiKeyInput, 'invalid-key');
+    expect(screen.getByText('Invalid API key format. Must start with "sk-"')).toBeInTheDocument();
+
+    // Clear and type valid key
+    await user.clear(apiKeyInput);
+    await user.type(apiKeyInput, 'sk-test123');
+    expect(screen.getByText('✓ Valid API key format')).toBeInTheDocument();
+  });
+
+  it('toggles API key visibility', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const apiKeyInput = screen.getByPlaceholderText('sk-...') as HTMLInputElement;
+    const toggleButton = screen.getByRole('button', { name: /show/i });
+
+    expect(apiKeyInput.type).toBe('password');
+
+    await user.click(toggleButton);
+    expect(apiKeyInput.type).toBe('text');
+
+    await user.click(screen.getByRole('button', { name: /hide/i }));
+    expect(apiKeyInput.type).toBe('password');
+  });
+
+  it('persists API key to localStorage', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<App />);
+
+    const apiKeyInput = screen.getByPlaceholderText('sk-...');
+    await user.type(apiKeyInput, 'sk-persistent-key');
+
+    unmount();
+
+    // Re-render and check if API key is still there
+    render(<App />);
+    expect(screen.getByDisplayValue('sk-persistent-key')).toBeInTheDocument();
+  });
+});
