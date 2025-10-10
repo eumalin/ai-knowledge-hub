@@ -1,12 +1,34 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Tuple
 from openai import OpenAI
 import numpy as np
+import os
 
 app = FastAPI()
+
+# Configure CORS to allow requests from frontend
+allowed_origins = [
+    "http://localhost:5173",           # Local dev
+    "http://127.0.0.1:5173",           # Local dev (alternative)
+]
+
+# Add production frontend URL from environment variable
+# Set FRONTEND_URL in Render to your exact Vercel deployment URL
+# e.g., https://your-app.vercel.app
+if frontend_url := os.getenv("FRONTEND_URL"):
+    allowed_origins.append(frontend_url)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
