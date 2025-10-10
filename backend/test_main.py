@@ -11,6 +11,44 @@ def test_health():
     assert response.json() == {"status": "ok"}
 
 
+def test_cors_headers():
+    """Test that CORS headers are properly set."""
+    # Test OPTIONS preflight request
+    response = client.options(
+        "/ask",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type,x-api-key"
+        }
+    )
+
+    assert response.status_code == 200
+    assert "access-control-allow-origin" in response.headers
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+    assert "access-control-allow-methods" in response.headers
+    assert "access-control-allow-headers" in response.headers
+
+
+def test_cors_blocks_unauthorized_origin():
+    """Test that CORS blocks requests from unauthorized origins."""
+    # Test with an origin that's not in the allowed list
+    response = client.options(
+        "/ask",
+        headers={
+            "Origin": "http://evil-site.com",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type,x-api-key"
+        }
+    )
+
+    # FastAPI's CORS middleware blocks unauthorized origins with 400
+    assert response.status_code == 400
+    # Verify the evil origin is not in the allowed origins header
+    if "access-control-allow-origin" in response.headers:
+        assert response.headers["access-control-allow-origin"] != "http://evil-site.com"
+
+
 def test_chunk_text():
     """Test text chunking functionality."""
     text = "This is a test. " * 100  # Create a long text
