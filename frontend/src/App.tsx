@@ -225,7 +225,7 @@ function App() {
             OpenAI API Key
           </h2>
           <p className="text-sm text-gray-600 mb-4">
-            Your API key is stored locally in your browser and never sent to our servers.
+            Your API key is stored locally in your browser and sent directly to OpenAI. We never store your API key on our servers.
           </p>
           <div className="relative">
             <input
