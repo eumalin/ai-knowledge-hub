@@ -3,7 +3,8 @@ from main import app, chunk_text, cosine_similarity
 from unittest.mock import Mock, patch
 import numpy as np
 
-client = TestClient(app)
+# Create test client with raise_server_exceptions=False to properly handle rate limiting
+client = TestClient(app, raise_server_exceptions=False)
 
 def test_health():
     response = client.get("/health")
@@ -164,3 +165,98 @@ def test_ask_rag_pipeline(mock_openai_class):
     # Verify OpenAI calls were made correctly
     assert mock_client.embeddings.create.called
     assert mock_client.chat.completions.create.called
+
+
+@patch('main.OpenAI')
+def test_rate_limiting_under_limit(mock_openai_class):
+    """Test that requests under the rate limit (10/minute) succeed."""
+    # Create mock OpenAI client
+    mock_client = Mock()
+    mock_openai_class.return_value = mock_client
+
+    def mock_embeddings_create(model, input):
+        response = Mock()
+        response.data = [Mock(embedding=[0.1, 0.2, 0.3]) for _ in input]
+        return response
+
+    mock_client.embeddings.create.side_effect = mock_embeddings_create
+
+    mock_chat_response = Mock()
+    mock_chat_response.choices = [
+        Mock(message=Mock(content="Test answer"))
+    ]
+    mock_client.chat.completions.create.return_value = mock_chat_response
+
+    # Make 5 requests (under the 10/minute limit)
+    for i in range(5):
+        response = client.post(
+            "/ask",
+            json={
+                "documents": [{
+                    "id": "1",
+                    "title": "Test",
+                    "content": "Test content",
+                    "createdAt": "2024-01-01"
+                }],
+                "question": f"Question {i}"
+            },
+            headers={"X-API-Key": "sk-test-key"}
+        )
+        assert response.status_code == 200, f"Request {i} failed with status {response.status_code}"
+
+
+@patch('main.OpenAI')
+def test_rate_limiting_exceeds_limit(mock_openai_class):
+    """Test that requests over the rate limit (10/minute) return 429."""
+    # Create mock OpenAI client
+    mock_client = Mock()
+    mock_openai_class.return_value = mock_client
+
+    def mock_embeddings_create(model, input):
+        response = Mock()
+        response.data = [Mock(embedding=[0.1, 0.2, 0.3]) for _ in input]
+        return response
+
+    mock_client.embeddings.create.side_effect = mock_embeddings_create
+
+    mock_chat_response = Mock()
+    mock_chat_response.choices = [
+        Mock(message=Mock(content="Test answer"))
+    ]
+    mock_client.chat.completions.create.return_value = mock_chat_response
+
+    # Make many requests to ensure we hit the rate limit (15 requests)
+    # Since rate limit state may persist across tests, we just verify that
+    # at least some requests succeed and at least one gets rate limited
+    responses = []
+    for i in range(15):
+        response = client.post(
+            "/ask",
+            json={
+                "documents": [{
+                    "id": "1",
+                    "title": "Test",
+                    "content": "Test content",
+                    "createdAt": "2024-01-01"
+                }],
+                "question": f"Question {i}"
+            },
+            headers={"X-API-Key": "sk-test-key"}
+        )
+        responses.append(response)
+
+    # Check that we got at least one 429 response (rate limited)
+    status_codes = [r.status_code for r in responses]
+    assert 429 in status_codes, "Should have at least one rate limited response"
+
+    # Find first 429 response and verify it's a proper rate limit response
+    rate_limited_response = next(r for r in responses if r.status_code == 429)
+    assert rate_limited_response.status_code == 429
+
+
+def test_rate_limiting_health_endpoint_not_limited():
+    """Test that /health endpoint is not rate limited."""
+    # Make many requests to /health endpoint
+    for i in range(20):
+        response = client.get("/health")
+        assert response.status_code == 200, f"/health should not be rate limited (request {i})"

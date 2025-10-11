@@ -1,14 +1,21 @@
-from __future__ import annotations
-
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Tuple
 from openai import OpenAI
 import numpy as np
 import os
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS to allow requests from frontend
 allowed_origins = [
@@ -72,7 +79,7 @@ def get_embeddings(client: OpenAI, texts: List[str]) -> List[List[float]]:
 
 def find_relevant_chunks(
     client: OpenAI,
-    documents: List[Document],
+    documents: List["Document"],
     question: str,
     top_k: int = 3
 ) -> List[Tuple[str, str, float]]:
@@ -134,13 +141,16 @@ def health():
 
 
 @app.post("/ask", response_model=AskResponse)
+@limiter.limit("10/minute")
 async def ask_question(
-    request: AskRequest,
+    data: AskRequest,
+    request: Request,
     x_api_key: Optional[str] = Header(None, alias="X-API-Key")
 ):
     """
     Ask questions about documents using OpenAI.
     Requires user's OpenAI API key passed via X-API-Key header.
+    Rate limited to 10 requests per minute per IP address.
     """
     # Validate API key
     if not x_api_key:
@@ -162,8 +172,8 @@ async def ask_question(
         # Find relevant chunks using embeddings and similarity search
         relevant_chunks = find_relevant_chunks(
             client=client,
-            documents=request.documents,
-            question=request.question,
+            documents=data.documents,
+            question=data.question,
             top_k=3
         )
 
@@ -184,7 +194,7 @@ async def ask_question(
                 },
                 {
                     "role": "user",
-                    "content": f"Context:\n{context}\n\nQuestion: {request.question}\n\n"
+                    "content": f"Context:\n{context}\n\nQuestion: {data.question}\n\n"
                                "Please answer the question based only on the context provided above."
                 }
             ],
