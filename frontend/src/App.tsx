@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Chat from './Chat';
+import ViewDocumentModal from './ViewDocumentModal';
 
 interface Document {
   id: string;
@@ -39,6 +40,8 @@ function App() {
   const [errors, setErrors] = useState({ title: '', content: '' });
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
   const [fileError, setFileError] = useState('');
+  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
+  const [importError, setImportError] = useState('');
 
   // Save to localStorage whenever documents change
   useEffect(() => {
@@ -150,6 +153,85 @@ function App() {
 
   const handleDeselectAll = () => {
     setSelectedDocIds(new Set());
+  };
+
+  const handleExportDocuments = () => {
+    if (documents.length === 0) {
+      alert('No documents to export');
+      return;
+    }
+
+    const dataStr = JSON.stringify(documents, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `documents-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportDocuments = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportError('');
+
+    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+      setImportError('Invalid file type. Please upload a JSON file.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const importedData = JSON.parse(content);
+
+        if (!Array.isArray(importedData)) {
+          setImportError('Invalid file format. Expected an array of documents.');
+          return;
+        }
+
+        const validDocuments: Document[] = [];
+        for (const doc of importedData) {
+          if (
+            typeof doc.id === 'string' &&
+            typeof doc.title === 'string' &&
+            typeof doc.content === 'string' &&
+            typeof doc.createdAt === 'string'
+          ) {
+            if (doc.title.length <= MAX_TITLE_LENGTH && doc.content.length <= MAX_CONTENT_LENGTH) {
+              validDocuments.push(doc);
+            }
+          }
+        }
+
+        if (validDocuments.length === 0) {
+          setImportError('No valid documents found in the file.');
+          return;
+        }
+
+        const newDocuments = validDocuments.map(doc => ({
+          ...doc,
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        }));
+
+        setDocuments([...documents, ...newDocuments]);
+        alert(`Successfully imported ${newDocuments.length} document(s)`);
+      } catch {
+        setImportError('Failed to parse JSON file. Please check the file format.');
+      }
+    };
+
+    reader.onerror = () => {
+      setImportError('Failed to read file');
+    };
+
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -375,7 +457,7 @@ function App() {
           {/* Document List */}
           <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
             <div className="mb-4">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-center mb-3">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
                   Documents ({documents.length})
                 </h2>
@@ -388,6 +470,32 @@ function App() {
                   </button>
                 )}
               </div>
+
+              {/* Export/Import Buttons */}
+              <div className="flex gap-2 mb-3">
+                <button
+                  onClick={handleExportDocuments}
+                  disabled={documents.length === 0}
+                  className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                >
+                  Export Documents
+                </button>
+                <label className="flex-1">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportDocuments}
+                    className="hidden"
+                  />
+                  <div className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors text-center cursor-pointer">
+                    Import Documents
+                  </div>
+                </label>
+              </div>
+              {importError && (
+                <p className="text-red-600 text-sm mb-2">{importError}</p>
+              )}
+
               {documents.length > 0 && (
                 <div className="flex gap-2 text-xs">
                   <button
@@ -455,13 +563,22 @@ function App() {
                           <h3 className="font-semibold text-gray-800 flex-1 break-all text-sm sm:text-base">
                             {doc.title}
                           </h3>
-                          <button
-                            onClick={() => handleDeleteDocument(doc.id)}
-                            className="text-red-600 hover:text-red-800 text-xs sm:text-sm flex-shrink-0 transition-colors px-2 py-1 hover:bg-red-50 rounded"
-                            title="Delete document"
-                          >
-                            Delete
-                          </button>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <button
+                              onClick={() => setViewingDocument(doc)}
+                              className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm transition-colors px-2 py-1 hover:bg-blue-50 rounded"
+                              title="View full content"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleDeleteDocument(doc.id)}
+                              className="text-red-600 hover:text-red-800 text-xs sm:text-sm transition-colors px-2 py-1 hover:bg-red-50 rounded"
+                              title="Delete document"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -490,6 +607,12 @@ function App() {
           />
         </div>
       </div>
+
+      {/* View Document Modal */}
+      <ViewDocumentModal
+        document={viewingDocument}
+        onClose={() => setViewingDocument(null)}
+      />
     </div>
   );
 }
