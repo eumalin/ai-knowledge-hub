@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Chat from './Chat';
 import ViewDocumentModal from './ViewDocumentModal';
+import DocumentForm from './DocumentForm';
 
 interface Document {
   id: string;
@@ -339,132 +340,29 @@ function App() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Document Input Form */}
-          <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
-              Add Document
-            </h2>
-            <form onSubmit={handleAddDocument}>
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <label
-                    htmlFor="title"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Document Title
-                  </label>
-                  <span className="text-xs text-gray-500">
-                    {title.length}/{MAX_TITLE_LENGTH}
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter document title"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.title
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
-                  }`}
-                  maxLength={MAX_TITLE_LENGTH}
-                />
-                {errors.title && (
-                  <p className="text-red-600 text-sm mt-1">{errors.title}</p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <label
-                    htmlFor="content"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Document Content
-                  </label>
-                  <span className="text-xs text-gray-500">
-                    {content.length.toLocaleString()}/{MAX_CONTENT_LENGTH.toLocaleString()}
-                  </span>
-                </div>
-                <textarea
-                  id="content"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Paste your document content here..."
-                  rows={12}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 resize-vertical ${
-                    errors.content
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
-                  }`}
-                  maxLength={MAX_CONTENT_LENGTH}
-                />
-                {errors.content && (
-                  <p className="text-red-600 text-sm mt-1">{errors.content}</p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <div className="flex items-center justify-center w-full">
-                  <label
-                    htmlFor="file-upload"
-                    className="flex flex-col items-center justify-center w-full border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors p-4"
-                  >
-                    <div className="flex flex-col items-center justify-center">
-                      <svg
-                        className="w-8 h-8 mb-2 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                        />
-                      </svg>
-                      <p className="text-sm text-gray-600 mb-1">
-                        <span className="font-semibold">Click to upload</span> a text file
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {ALLOWED_FILE_EXTENSIONS.join(', ')} (max {MAX_FILE_SIZE / 1024 / 1024}MB)
-                      </p>
-                    </div>
-                    <input
-                      id="file-upload"
-                      type="file"
-                      className="hidden"
-                      accept={ALLOWED_FILE_EXTENSIONS.join(',')}
-                      onChange={handleFileUpload}
-                    />
-                  </label>
-                </div>
-                {fileError && (
-                  <p className="text-red-600 text-sm mt-2">{fileError}</p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Add Document
-              </button>
-            </form>
-          </div>
+          <DocumentForm
+            title={title}
+            content={content}
+            errors={errors}
+            fileError={fileError}
+            onTitleChange={setTitle}
+            onContentChange={setContent}
+            onFileUpload={handleFileUpload}
+            onSubmit={handleAddDocument}
+          />
 
           {/* Document List */}
           <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
             <div className="mb-4">
               <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800" id="document-list-heading">
                   Documents ({documents.length})
                 </h2>
                 {documents.length > 0 && (
                   <button
                     onClick={handleClearAll}
                     className="text-xs sm:text-sm text-gray-600 hover:text-red-600 transition-colors"
+                    aria-label="Clear all documents"
                   >
                     Clear All
                   </button>
@@ -472,11 +370,12 @@ function App() {
               </div>
 
               {/* Export/Import Buttons */}
-              <div className="flex gap-2 mb-3">
+              <div className="flex gap-2 mb-3" role="group" aria-label="Document import and export">
                 <button
                   onClick={handleExportDocuments}
                   disabled={documents.length === 0}
                   className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  aria-label={`Export ${documents.length} document${documents.length !== 1 ? 's' : ''}`}
                 >
                   Export Documents
                 </button>
@@ -486,32 +385,47 @@ function App() {
                     accept=".json"
                     onChange={handleImportDocuments}
                     className="hidden"
+                    aria-label="Import documents from JSON file"
                   />
-                  <div className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors text-center cursor-pointer">
+                  <div
+                    className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors text-center cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.currentTarget.previousElementSibling?.querySelector('input')?.click();
+                      }
+                    }}
+                  >
                     Import Documents
                   </div>
                 </label>
               </div>
               {importError && (
-                <p className="text-red-600 text-sm mb-2">{importError}</p>
+                <p className="text-red-600 text-sm mb-2" role="alert">
+                  {importError}
+                </p>
               )}
 
               {documents.length > 0 && (
-                <div className="flex gap-2 text-xs">
+                <div className="flex gap-2 text-xs" role="group" aria-label="Document selection controls">
                   <button
                     onClick={handleSelectAll}
                     className="text-blue-600 hover:text-blue-800 transition-colors"
+                    aria-label="Select all documents for Q&A"
                   >
                     Select All
                   </button>
-                  <span className="text-gray-400">|</span>
+                  <span className="text-gray-400" aria-hidden="true">|</span>
                   <button
                     onClick={handleDeselectAll}
                     className="text-blue-600 hover:text-blue-800 transition-colors"
+                    aria-label="Deselect all documents"
                   >
                     Deselect All
                   </button>
-                  <span className="text-gray-600 ml-2">
+                  <span className="text-gray-600 ml-2" aria-live="polite">
                     ({selectedDocIds.size} selected for Q&A)
                   </span>
                 </div>
@@ -540,7 +454,11 @@ function App() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-3 sm:space-y-4 max-h-[500px] sm:max-h-[600px] overflow-y-auto pr-2">
+              <div
+                className="space-y-3 sm:space-y-4 max-h-[500px] sm:max-h-[600px] overflow-y-auto pr-2"
+                role="list"
+                aria-labelledby="document-list-heading"
+              >
                 {documents.map((doc) => (
                   <div
                     key={doc.id}
@@ -549,6 +467,7 @@ function App() {
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 bg-gray-50 hover:border-blue-300'
                     }`}
+                    role="listitem"
                   >
                     <div className="flex items-start gap-3 mb-2">
                       <input
@@ -556,25 +475,28 @@ function App() {
                         checked={selectedDocIds.has(doc.id)}
                         onChange={() => handleToggleDocument(doc.id)}
                         className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                        title="Select for Q&A"
+                        aria-label={`Select ${doc.title} for Q&A`}
+                        id={`doc-checkbox-${doc.id}`}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
                           <h3 className="font-semibold text-gray-800 flex-1 break-all text-sm sm:text-base">
-                            {doc.title}
+                            <label htmlFor={`doc-checkbox-${doc.id}`} className="cursor-pointer">
+                              {doc.title}
+                            </label>
                           </h3>
-                          <div className="flex gap-2 flex-shrink-0">
+                          <div className="flex gap-2 flex-shrink-0" role="group" aria-label={`Actions for ${doc.title}`}>
                             <button
                               onClick={() => setViewingDocument(doc)}
-                              className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm transition-colors px-2 py-1 hover:bg-blue-50 rounded"
-                              title="View full content"
+                              className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm transition-colors px-2 py-1 hover:bg-blue-50 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              aria-label={`View full content of ${doc.title}`}
                             >
                               View
                             </button>
                             <button
                               onClick={() => handleDeleteDocument(doc.id)}
-                              className="text-red-600 hover:text-red-800 text-xs sm:text-sm transition-colors px-2 py-1 hover:bg-red-50 rounded"
-                              title="Delete document"
+                              className="text-red-600 hover:text-red-800 text-xs sm:text-sm transition-colors px-2 py-1 hover:bg-red-50 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                              aria-label={`Delete ${doc.title}`}
                             >
                               Delete
                             </button>
