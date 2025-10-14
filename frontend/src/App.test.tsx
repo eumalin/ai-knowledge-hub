@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 
@@ -204,9 +204,10 @@ describe('App - File Upload', () => {
     const fileInput = screen.getByLabelText(/Click to upload/i) as HTMLInputElement;
     await user.upload(fileInput, file);
 
-    // Title should be populated with filename (without extension)
-    expect(screen.getByDisplayValue('test-document')).toBeInTheDocument();
-    // Content should be populated
+    // Wait for FileReader to complete and populate fields
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('test-document')).toBeInTheDocument();
+    });
     expect(screen.getByDisplayValue(fileContent)).toBeInTheDocument();
   });
 
@@ -256,6 +257,8 @@ describe('App - File Upload', () => {
     await user.upload(fileInput, validFile);
 
     expect(screen.queryByText(/File size must be less than 1MB/)).not.toBeInTheDocument();
-    expect(screen.getByDisplayValue('test')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('test')).toBeInTheDocument();
+    });
   });
 });
