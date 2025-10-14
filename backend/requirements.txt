@@ -3,5 +3,5 @@ uvicorn==0.30.0
 pytest
 openai>=1.0.0
 numpy>=1.24.0
-Deprecated @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/deprecated_1728591820998/work
-wrapt @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_30cvf__dq_/croot/wrapt_1736541623359/work
+Deprecated>=1.2.0
+wrapt>=1.16.0
