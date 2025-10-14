@@ -5,3 +5,4 @@ openai>=1.0.0
 numpy>=1.24.0
 Deprecated>=1.2.0
 wrapt>=1.16.0
+slowapi>=0.1.9
