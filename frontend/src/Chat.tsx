@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Document {
   id: string;
@@ -21,11 +21,28 @@ interface ChatProps {
   apiBaseUrl: string;
 }
 
+const CHAT_HISTORY_KEY = 'ai-knowledge-chat-history';
+
 function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const stored = localStorage.getItem(CHAT_HISTORY_KEY);
+    return stored ? JSON.parse(stored) : [];
+  });
   const [question, setQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages));
+  }, [messages]);
+
+  const handleClearHistory = () => {
+    if (confirm('Are you sure you want to clear all chat history?')) {
+      setMessages([]);
+      localStorage.removeItem(CHAT_HISTORY_KEY);
+    }
+  };
 
   const handleAskQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,9 +113,19 @@ function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
-      <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
-        Ask Questions
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+          Ask Questions
+        </h2>
+        {messages.length > 0 && (
+          <button
+            onClick={handleClearHistory}
+            className="text-xs sm:text-sm text-gray-600 hover:text-red-600 transition-colors"
+          >
+            Clear History
+          </button>
+        )}
+      </div>
 
       {/* Chat Messages */}
       <div className="mb-4 h-[400px] overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">

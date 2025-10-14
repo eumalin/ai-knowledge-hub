@@ -15,6 +15,7 @@ const mockDocuments = [
 describe('Chat', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn());
+    localStorage.clear();
   });
 
   it('renders chat interface', () => {
@@ -276,6 +277,210 @@ describe('Chat', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('Chat History', () => {
+    it('persists messages to localStorage', async () => {
+      const user = userEvent.setup();
+      const mockResponse = {
+        answer: 'AI response',
+        sources: ['Test Document'],
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      } as Response);
+
+      render(
+        <Chat
+          documents={mockDocuments}
+          apiKey="sk-test"
+          apiBaseUrl="http://localhost:8000"
+        />
+      );
+
+      const input = screen.getByPlaceholderText(
+        'Ask a question about your documents...'
+      );
+      await user.type(input, 'Test question');
+      await user.click(screen.getByRole('button', { name: /ask/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('AI response')).toBeInTheDocument();
+      });
+
+      // Check localStorage was updated
+      const stored = localStorage.getItem('ai-knowledge-chat-history');
+      expect(stored).toBeTruthy();
+      const messages = JSON.parse(stored!);
+      expect(messages).toHaveLength(2);
+      expect(messages[0].content).toBe('Test question');
+      expect(messages[1].content).toBe('AI response');
+    });
+
+    it('loads messages from localStorage on mount', () => {
+      const existingMessages = [
+        {
+          id: '1',
+          role: 'user' as const,
+          content: 'Previous question',
+          timestamp: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          id: '2',
+          role: 'assistant' as const,
+          content: 'Previous answer',
+          timestamp: '2024-01-01T00:01:00.000Z',
+          sources: ['Doc 1'],
+        },
+      ];
+
+      localStorage.setItem(
+        'ai-knowledge-chat-history',
+        JSON.stringify(existingMessages)
+      );
+
+      render(
+        <Chat
+          documents={mockDocuments}
+          apiKey="sk-test"
+          apiBaseUrl="http://localhost:8000"
+        />
+      );
+
+      expect(screen.getByText('Previous question')).toBeInTheDocument();
+      expect(screen.getByText('Previous answer')).toBeInTheDocument();
+      expect(screen.getByText(/Doc 1/)).toBeInTheDocument();
+    });
+
+    it('shows clear history button when messages exist', () => {
+      const existingMessages = [
+        {
+          id: '1',
+          role: 'user' as const,
+          content: 'Question',
+          timestamp: '2024-01-01T00:00:00.000Z',
+        },
+      ];
+
+      localStorage.setItem(
+        'ai-knowledge-chat-history',
+        JSON.stringify(existingMessages)
+      );
+
+      render(
+        <Chat
+          documents={mockDocuments}
+          apiKey="sk-test"
+          apiBaseUrl="http://localhost:8000"
+        />
+      );
+
+      expect(screen.getByText('Clear History')).toBeInTheDocument();
+    });
+
+    it('hides clear history button when no messages', () => {
+      render(
+        <Chat
+          documents={mockDocuments}
+          apiKey="sk-test"
+          apiBaseUrl="http://localhost:8000"
+        />
+      );
+
+      expect(screen.queryByText('Clear History')).not.toBeInTheDocument();
+    });
+
+    it('clears chat history when clear button is clicked', async () => {
+      const user = userEvent.setup();
+      const existingMessages = [
+        {
+          id: '1',
+          role: 'user' as const,
+          content: 'Question',
+          timestamp: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          id: '2',
+          role: 'assistant' as const,
+          content: 'Answer',
+          timestamp: '2024-01-01T00:01:00.000Z',
+        },
+      ];
+
+      localStorage.setItem(
+        'ai-knowledge-chat-history',
+        JSON.stringify(existingMessages)
+      );
+
+      // Mock confirm dialog
+      vi.stubGlobal('confirm', vi.fn(() => true));
+
+      render(
+        <Chat
+          documents={mockDocuments}
+          apiKey="sk-test"
+          apiBaseUrl="http://localhost:8000"
+        />
+      );
+
+      // Messages should be visible
+      expect(screen.getByText('Question')).toBeInTheDocument();
+      expect(screen.getByText('Answer')).toBeInTheDocument();
+
+      // Click clear history
+      const clearButton = screen.getByText('Clear History');
+      await user.click(clearButton);
+
+      // Messages should be gone
+      expect(screen.queryByText('Question')).not.toBeInTheDocument();
+      expect(screen.queryByText('Answer')).not.toBeInTheDocument();
+
+      // localStorage should be cleared
+      expect(localStorage.getItem('ai-knowledge-chat-history')).toBe('[]');
+
+      // Clear button should be hidden
+      expect(screen.queryByText('Clear History')).not.toBeInTheDocument();
+    });
+
+    it('does not clear history when user cancels confirmation', async () => {
+      const user = userEvent.setup();
+      const existingMessages = [
+        {
+          id: '1',
+          role: 'user' as const,
+          content: 'Question',
+          timestamp: '2024-01-01T00:00:00.000Z',
+        },
+      ];
+
+      localStorage.setItem(
+        'ai-knowledge-chat-history',
+        JSON.stringify(existingMessages)
+      );
+
+      // Mock confirm dialog - user cancels
+      vi.stubGlobal('confirm', vi.fn(() => false));
+
+      render(
+        <Chat
+          documents={mockDocuments}
+          apiKey="sk-test"
+          apiBaseUrl="http://localhost:8000"
+        />
+      );
+
+      const clearButton = screen.getByText('Clear History');
+      await user.click(clearButton);
+
+      // Message should still be visible
+      expect(screen.getByText('Question')).toBeInTheDocument();
+
+      // localStorage should not be cleared
+      const stored = localStorage.getItem('ai-knowledge-chat-history');
+      expect(JSON.parse(stored!)).toHaveLength(1);
     });
   });
 });
