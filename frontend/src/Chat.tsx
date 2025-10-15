@@ -112,15 +112,15 @@ function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
+    <div className="card">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+        <h2 className="heading-1">
           Ask Questions
         </h2>
         {messages.length > 0 && (
           <button
             onClick={handleClearHistory}
-            className="text-xs sm:text-sm text-gray-600 hover:text-red-600 transition-colors"
+            className="text-xs sm:text-sm text-gray-400 hover:text-red-400 transition-colors"
           >
             Clear History
           </button>
@@ -128,9 +128,9 @@ function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
       </div>
 
       {/* Chat Messages */}
-      <div className="mb-4 h-[400px] overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
+      <div className="mb-4 h-[400px] overflow-y-auto border border-slate-600 rounded-lg p-4 bg-slate-900/40">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500 text-sm text-center px-4">
+          <div className="flex items-center justify-center h-full text-muted text-sm text-center px-4">
             {documents.length === 0
               ? 'Select documents using the checkboxes above, then ask questions'
               : 'Ask a question about your selected documents'}
@@ -145,17 +145,13 @@ function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
                 }`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-200'
-                  }`}
+                  className={message.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}
                 >
                   <p className="text-sm whitespace-pre-wrap break-words">
                     {message.content}
                   </p>
                   {message.sources && message.sources.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-600">
+                    <div className="mt-2 pt-2 border-t border-slate-500 text-xs text-gray-300">
                       <span className="font-semibold">Sources:</span>{' '}
                       {message.sources.join(', ')}
                     </div>
@@ -165,15 +161,15 @@ function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                <div className="bg-slate-700/80 border border-slate-600 rounded-lg p-3">
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
                       style={{ animationDelay: '0.1s' }}
                     ></div>
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
                       style={{ animationDelay: '0.2s' }}
                     ></div>
                   </div>
@@ -186,22 +182,22 @@ function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600 text-sm">{error}</p>
+        <div className="alert-error">
+          <p>{error}</p>
         </div>
       )}
 
       {/* Info Messages */}
       {!apiKey && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-yellow-800 text-sm">
+        <div className="alert-warning">
+          <p>
             ⚠️ Please enter your OpenAI API key above to ask questions
           </p>
         </div>
       )}
       {apiKey && documents.length === 0 && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-blue-800 text-sm">
+        <div className="alert-info">
+          <p>
             ℹ️ Select at least one document using the checkboxes above
           </p>
         </div>
@@ -215,13 +211,13 @@ function Chat({ documents, apiKey, apiBaseUrl }: ChatProps) {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Ask a question about your documents..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="input input-focus-cyan flex-1 disabled:opacity-50"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading || !apiKey || documents.length === 0}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="btn-secondary px-6"
           >
             {isLoading ? 'Sending...' : 'Ask'}
           </button>

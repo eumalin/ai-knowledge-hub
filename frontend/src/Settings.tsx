@@ -15,17 +15,17 @@ function Settings({ apiKey, onApiKeyChange, apiKeyError }: SettingsProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6 mb-6">
+    <div className="card mb-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-2 hover:bg-purple-500/20 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
             aria-label="Toggle settings"
             aria-expanded={showSettings}
           >
             <svg
-              className="w-6 h-6 text-gray-600"
+              className="w-6 h-6 text-purple-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -44,25 +44,35 @@ function Settings({ apiKey, onApiKeyChange, apiKeyError }: SettingsProps) {
               />
             </svg>
           </button>
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+          <h2 className="heading-1">
             Settings
           </h2>
         </div>
         {!showSettings && (
           <>
             {apiKey && !apiKeyError ? (
-              <span className="text-sm text-green-600">✓ API key configured</span>
+              <span className="text-sm text-emerald-400 flex items-center gap-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                API key configured
+              </span>
             ) : (
-              <span className="text-sm text-yellow-600">⚠ API key not configured</span>
+              <span className="text-sm text-amber-400 flex items-center gap-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                API key not configured
+              </span>
             )}
           </>
         )}
       </div>
 
       {showSettings && (
-        <div className="mt-4">
-          <h3 className="text-md font-medium text-gray-700 mb-2">OpenAI API Key</h3>
-          <p className="text-sm text-gray-600 mb-4">
+        <div className="mt-4 pt-4 border-t border-slate-700/50">
+          <h3 className="heading-2 mb-2">OpenAI API Key</h3>
+          <p className="text-muted text-sm mb-4">
             Your API key is stored locally in your browser and sent directly to OpenAI. We never store your API key on our servers.
           </p>
           <div className="relative">
@@ -72,28 +82,29 @@ function Settings({ apiKey, onApiKeyChange, apiKeyError }: SettingsProps) {
               onChange={handleApiKeyChange}
               placeholder="sk-..."
               aria-label="OpenAI API Key"
-              className={`w-full px-3 py-2 pr-24 border rounded-md focus:outline-none focus:ring-2 ${
-                apiKeyError
-                  ? 'border-red-500 focus:ring-red-500'
-                  : 'border-gray-300 focus:ring-blue-500'
-              }`}
+              className={`input pr-24 ${apiKeyError ? 'input-error' : ''}`}
             />
             <button
               type="button"
               onClick={() => setShowApiKey(!showApiKey)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600 hover:text-gray-800 px-3 py-1 rounded hover:bg-gray-100 transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-400 hover:text-gray-200 px-3 py-1 rounded hover:bg-slate-700/50 transition-colors"
               aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
             >
               {showApiKey ? 'Hide' : 'Show'}
             </button>
           </div>
           {apiKeyError && (
-            <p className="text-red-600 text-sm mt-2" role="alert">
+            <p className="error-text mt-2" role="alert">
               {apiKeyError}
             </p>
           )}
           {apiKey && !apiKeyError && (
-            <p className="text-green-600 text-sm mt-2">✓ Valid API key format</p>
+            <p className="text-emerald-400 text-sm mt-2 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Valid API key format
+            </p>
           )}
         </div>
       )}

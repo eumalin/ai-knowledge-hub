@@ -25,8 +25,8 @@ function DocumentForm({
   onSubmit,
 }: DocumentFormProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
-      <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
+    <div className="card">
+      <h2 className="heading-1 mb-4">
         Add Document
       </h2>
       <form onSubmit={onSubmit}>
@@ -34,11 +34,11 @@ function DocumentForm({
           <div className="flex justify-between items-center mb-2">
             <label
               htmlFor="title"
-              className="block text-sm font-medium text-gray-700"
+              className="label"
             >
               Document Title
             </label>
-            <span className="text-xs text-gray-500" aria-live="polite">
+            <span className="helper-text" aria-live="polite">
               {title.length}/{MAX_TITLE_LENGTH}
             </span>
           </div>
@@ -52,15 +52,11 @@ function DocumentForm({
             aria-required="true"
             aria-invalid={!!errors.title}
             aria-describedby={errors.title ? 'title-error' : undefined}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-              errors.title
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
+            className={`input ${errors.title ? 'input-error' : ''}`}
             maxLength={MAX_TITLE_LENGTH}
           />
           {errors.title && (
-            <p id="title-error" className="text-red-600 text-sm mt-1" role="alert">
+            <p id="title-error" className="error-text" role="alert">
               {errors.title}
             </p>
           )}
@@ -70,11 +66,11 @@ function DocumentForm({
           <div className="flex justify-between items-center mb-2">
             <label
               htmlFor="content"
-              className="block text-sm font-medium text-gray-700"
+              className="label"
             >
               Document Content
             </label>
-            <span className="text-xs text-gray-500" aria-live="polite">
+            <span className="helper-text" aria-live="polite">
               {content.length.toLocaleString()}/{MAX_CONTENT_LENGTH.toLocaleString()}
             </span>
           </div>
@@ -88,15 +84,11 @@ function DocumentForm({
             aria-required="true"
             aria-invalid={!!errors.content}
             aria-describedby={errors.content ? 'content-error' : undefined}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 resize-vertical ${
-              errors.content
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
+            className={`textarea ${errors.content ? 'input-error' : ''}`}
             maxLength={MAX_CONTENT_LENGTH}
           />
           {errors.content && (
-            <p id="content-error" className="text-red-600 text-sm mt-1" role="alert">
+            <p id="content-error" className="error-text" role="alert">
               {errors.content}
             </p>
           )}
@@ -106,7 +98,7 @@ function DocumentForm({
           <div className="flex items-center justify-center w-full">
             <label
               htmlFor="file-upload"
-              className="flex flex-col items-center justify-center w-full border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors p-4"
+              className="flex flex-col items-center justify-center w-full border-2 border-slate-600 border-dashed rounded-lg cursor-pointer bg-slate-900/30 hover:bg-slate-900/50 hover:border-purple-500/50 transition-all duration-200 p-4"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -117,7 +109,7 @@ function DocumentForm({
             >
               <div className="flex flex-col items-center justify-center">
                 <svg
-                  className="w-8 h-8 mb-2 text-gray-500"
+                  className="w-8 h-8 mb-2 text-purple-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -130,10 +122,10 @@ function DocumentForm({
                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                   />
                 </svg>
-                <p className="text-sm text-gray-600 mb-1">
-                  <span className="font-semibold">Click to upload</span> a text file
+                <p className="text-sm text-gray-300 mb-1">
+                  <span className="font-semibold text-purple-400">Click to upload</span> a text file
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-400">
                   {ALLOWED_FILE_EXTENSIONS.join(', ')} (max {MAX_FILE_SIZE / 1024 / 1024}MB)
                 </p>
               </div>
@@ -148,7 +140,7 @@ function DocumentForm({
             </label>
           </div>
           {fileError && (
-            <p className="text-red-600 text-sm mt-2" role="alert">
+            <p className="error-text mt-2" role="alert">
               {fileError}
             </p>
           )}
@@ -156,7 +148,7 @@ function DocumentForm({
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          className="btn-primary w-full"
           aria-label="Add document to list"
         >
           Add Document

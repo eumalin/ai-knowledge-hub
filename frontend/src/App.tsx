@@ -290,14 +290,15 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800">
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+        {/* Header with gradient text */}
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-3 drop-shadow-lg">
             AI Knowledge Q&A Platform
           </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            Store your documents locally and prepare for AI-powered Q&A
+          <p className="text-sm sm:text-base text-gray-200">
+            Store your documents locally and get AI-powered answers
           </p>
         </div>
 
@@ -322,16 +323,16 @@ function App() {
           />
 
           {/* Document List */}
-          <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
+          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300 p-4 sm:p-6">
             <div className="mb-4">
               <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-800" id="document-list-heading">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-100" id="document-list-heading">
                   Documents ({documents.length})
                 </h2>
                 {documents.length > 0 && (
                   <button
                     onClick={handleClearAll}
-                    className="text-xs sm:text-sm text-gray-600 hover:text-red-600 transition-colors"
+                    className="text-xs sm:text-sm text-gray-400 hover:text-red-400 transition-colors"
                     aria-label="Clear all documents"
                   >
                     Clear All
@@ -344,7 +345,7 @@ function App() {
                 <button
                   onClick={handleExportDocuments}
                   disabled={documents.length === 0}
-                  className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  className="flex-1 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-md disabled:from-slate-600 disabled:to-slate-600 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 shadow-lg disabled:shadow-none"
                   aria-label={`Export ${documents.length} document${documents.length !== 1 ? 's' : ''}`}
                 >
                   Export Documents
@@ -358,7 +359,7 @@ function App() {
                     aria-label="Import documents from JSON file"
                   />
                   <div
-                    className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors text-center cursor-pointer"
+                    className="w-full px-3 py-2 text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 text-center cursor-pointer shadow-lg"
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
@@ -373,7 +374,7 @@ function App() {
                 </label>
               </div>
               {importError && (
-                <p className="text-red-600 text-sm mb-2" role="alert">
+                <p className="text-red-400 text-sm mb-2" role="alert">
                   {importError}
                 </p>
               )}
@@ -382,20 +383,20 @@ function App() {
                 <div className="flex gap-2 text-xs" role="group" aria-label="Document selection controls">
                   <button
                     onClick={handleSelectAll}
-                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
                     aria-label="Select all documents for Q&A"
                   >
                     Select All
                   </button>
-                  <span className="text-gray-400" aria-hidden="true">|</span>
+                  <span className="text-gray-600" aria-hidden="true">|</span>
                   <button
                     onClick={handleDeselectAll}
-                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
                     aria-label="Deselect all documents"
                   >
                     Deselect All
                   </button>
-                  <span className="text-gray-600 ml-2" aria-live="polite">
+                  <span className="text-gray-300 ml-2" aria-live="polite">
                     ({selectedDocIds.size} selected for Q&A)
                   </span>
                 </div>
@@ -404,7 +405,7 @@ function App() {
             {documents.length === 0 ? (
               <div className="text-center py-12 px-4">
                 <svg
-                  className="mx-auto h-12 w-12 text-gray-400 mb-4"
+                  className="mx-auto h-12 w-12 text-cyan-400/50 mb-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -416,7 +417,7 @@ function App() {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <p className="text-gray-500 text-sm sm:text-base mb-2">
+                <p className="text-gray-300 text-sm sm:text-base mb-2">
                   No documents yet
                 </p>
                 <p className="text-gray-400 text-xs sm:text-sm">
@@ -432,10 +433,10 @@ function App() {
                 {documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className={`border rounded-lg p-3 sm:p-4 hover:shadow-sm transition-all ${
+                    className={`border rounded-lg p-3 sm:p-4 hover:shadow-lg transition-all duration-200 ${
                       selectedDocIds.has(doc.id)
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 bg-gray-50 hover:border-blue-300'
+                        ? 'border-cyan-500/50 bg-slate-700/80 shadow-cyan-500/20'
+                        : 'border-slate-600 bg-slate-900/40 hover:border-cyan-500/30 hover:bg-slate-700/50'
                     }`}
                     role="listitem"
                   >
@@ -444,13 +445,13 @@ function App() {
                         type="checkbox"
                         checked={selectedDocIds.has(doc.id)}
                         onChange={() => handleToggleDocument(doc.id)}
-                        className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                        className="mt-1 w-4 h-4 text-cyan-500 bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-cyan-500"
                         aria-label={`Select ${doc.title} for Q&A`}
                         id={`doc-checkbox-${doc.id}`}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
-                          <h3 className="font-semibold text-gray-800 flex-1 break-all text-sm sm:text-base">
+                          <h3 className="font-semibold text-gray-100 flex-1 break-all text-sm sm:text-base">
                             <label htmlFor={`doc-checkbox-${doc.id}`} className="cursor-pointer">
                               {doc.title}
                             </label>
@@ -458,14 +459,14 @@ function App() {
                           <div className="flex gap-2 flex-shrink-0" role="group" aria-label={`Actions for ${doc.title}`}>
                             <button
                               onClick={() => setViewingDocument(doc)}
-                              className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm transition-colors px-2 py-1 hover:bg-blue-50 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="text-cyan-400 hover:text-cyan-300 text-xs sm:text-sm transition-colors px-2 py-1 hover:bg-cyan-500/10 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
                               aria-label={`View full content of ${doc.title}`}
                             >
                               View
                             </button>
                             <button
                               onClick={() => handleDeleteDocument(doc.id)}
-                              className="text-red-600 hover:text-red-800 text-xs sm:text-sm transition-colors px-2 py-1 hover:bg-red-50 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                              className="text-red-400 hover:text-red-300 text-xs sm:text-sm transition-colors px-2 py-1 hover:bg-red-500/10 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
                               aria-label={`Delete ${doc.title}`}
                             >
                               Delete
@@ -474,7 +475,7 @@ function App() {
                         </div>
                       </div>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-2 break-words leading-relaxed">
+                    <p className="text-xs sm:text-sm text-gray-300 mb-2 break-words leading-relaxed">
                       {doc.content.slice(0, 100)}
                       {doc.content.length > 100 ? '...' : ''}
                     </p>

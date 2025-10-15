@@ -155,7 +155,7 @@ describe('App - API Key', () => {
     // Clear and type valid key
     await user.clear(apiKeyInput);
     await user.type(apiKeyInput, 'sk-test123');
-    expect(screen.getByText('✓ Valid API key format')).toBeInTheDocument();
+    expect(screen.getByText('Valid API key format')).toBeInTheDocument();
   });
 
   it('toggles API key visibility', async () => {

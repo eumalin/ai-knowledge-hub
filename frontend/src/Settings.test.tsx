@@ -44,31 +44,31 @@ describe('Settings', () => {
   it('shows configured status when API key is valid and settings are collapsed', () => {
     render(<Settings {...defaultProps} apiKey="sk-test123" />);
 
-    expect(screen.getByText('✓ API key configured')).toBeInTheDocument();
+    expect(screen.getByText('API key configured')).toBeInTheDocument();
   });
 
   it('shows not configured status when API key is empty and settings are collapsed', () => {
     render(<Settings {...defaultProps} apiKey="" />);
 
-    expect(screen.getByText('⚠ API key not configured')).toBeInTheDocument();
+    expect(screen.getByText('API key not configured')).toBeInTheDocument();
   });
 
   it('hides configured status when settings are expanded', async () => {
     const user = userEvent.setup();
     render(<Settings {...defaultProps} apiKey="sk-test123" />);
 
-    expect(screen.getByText('✓ API key configured')).toBeInTheDocument();
+    expect(screen.getByText('API key configured')).toBeInTheDocument();
 
     const toggleButton = screen.getByLabelText('Toggle settings');
     await user.click(toggleButton);
 
-    expect(screen.queryByText('✓ API key configured')).not.toBeInTheDocument();
+    expect(screen.queryByText('API key configured')).not.toBeInTheDocument();
   });
 
   it('does not show configured status when API key has error', () => {
     render(<Settings {...defaultProps} apiKey="invalid" apiKeyError="Invalid format" />);
 
-    expect(screen.queryByText('✓ API key configured')).not.toBeInTheDocument();
+    expect(screen.queryByText('API key configured')).not.toBeInTheDocument();
   });
 
   it('calls onApiKeyChange when input value changes', async () => {
@@ -123,7 +123,7 @@ describe('Settings', () => {
     const toggleButton = screen.getByLabelText('Toggle settings');
     await user.click(toggleButton);
 
-    expect(screen.getByText('✓ Valid API key format')).toBeInTheDocument();
+    expect(screen.getByText('Valid API key format')).toBeInTheDocument();
   });
 
   it('displays API key input with correct styling when there is an error', async () => {
@@ -134,7 +134,7 @@ describe('Settings', () => {
     await user.click(toggleButton);
 
     const input = screen.getByLabelText('OpenAI API Key');
-    expect(input).toHaveClass('border-red-500');
+    expect(input).toHaveClass('input-error');
   });
 
   it('has proper ARIA attributes', async () => {
