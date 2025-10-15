@@ -1,14 +1,13 @@
-from fastapi import FastAPI, Header, HTTPException, Request, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from typing import List, Optional, Tuple
-from openai import OpenAI
-import numpy as np
 import os
+
+import numpy as np
+from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from openai import OpenAI
+from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -38,7 +37,7 @@ app.add_middleware(
 )
 
 
-def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
+def chunk_text(text: str, chunk_size: int = 500) -> list[str]:
     """Split text into chunks of roughly chunk_size characters."""
     words = text.split()
     chunks = []
@@ -61,14 +60,14 @@ def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
     return chunks
 
 
-def cosine_similarity(a: List[float], b: List[float]) -> float:
+def cosine_similarity(a: list[float], b: list[float]) -> float:
     """Calculate cosine similarity between two vectors."""
     a_np = np.array(a)
     b_np = np.array(b)
     return float(np.dot(a_np, b_np) / (np.linalg.norm(a_np) * np.linalg.norm(b_np)))
 
 
-def get_embeddings(client: OpenAI, texts: List[str]) -> List[List[float]]:
+def get_embeddings(client: OpenAI, texts: list[str]) -> list[list[float]]:
     """Get embeddings for a list of texts using OpenAI."""
     response = client.embeddings.create(
         model="text-embedding-ada-002",
@@ -79,10 +78,10 @@ def get_embeddings(client: OpenAI, texts: List[str]) -> List[List[float]]:
 
 def find_relevant_chunks(
     client: OpenAI,
-    documents: List["Document"],
+    documents: list["Document"],
     question: str,
     top_k: int = 3
-) -> List[Tuple[str, str, float]]:
+) -> list[tuple[str, str, float]]:
     """
     Find the most relevant chunks from documents for the given question.
     Returns list of (doc_title, chunk_text, similarity_score) tuples.
@@ -121,13 +120,13 @@ class Document(BaseModel):
 
 
 class AskRequest(BaseModel):
-    documents: List[Document]
+    documents: list[Document]
     question: str
 
 
 class AskResponse(BaseModel):
     answer: str
-    sources: List[str]
+    sources: list[str]
 
 
 @app.get("/")
@@ -145,7 +144,7 @@ def health():
 async def ask_question(
     data: AskRequest,
     request: Request,
-    x_api_key: Optional[str] = Header(None, alias="X-API-Key")
+    x_api_key: str | None = Header(None, alias="X-API-Key")
 ):
     """
     Ask questions about documents using OpenAI.
@@ -189,13 +188,18 @@ async def ask_question(
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a helpful assistant that answers questions based on the provided document excerpts. "
-                               "Only use information from the provided context to answer questions."
+                    "content": (
+                        "You are a helpful assistant that answers questions "
+                        "based on the provided document excerpts. "
+                        "Only use information from the provided context to answer questions."
+                    )
                 },
                 {
                     "role": "user",
-                    "content": f"Context:\n{context}\n\nQuestion: {data.question}\n\n"
-                               "Please answer the question based only on the context provided above."
+                    "content": (
+                        f"Context:\n{context}\n\nQuestion: {data.question}\n\n"
+                        "Please answer the question based only on the context provided above."
+                    )
                 }
             ],
             max_tokens=500,
@@ -205,7 +209,7 @@ async def ask_question(
         answer = response.choices[0].message.content
 
         # Get unique document titles from relevant chunks
-        sources = list(set([title for title, _, _ in relevant_chunks]))
+        sources = list({title for title, _, _ in relevant_chunks})
 
         return AskResponse(
             answer=answer,
@@ -219,8 +223,9 @@ async def ask_question(
             raise HTTPException(
                 status_code=401,
                 detail="Invalid OpenAI API key"
-            )
+            ) from e
         raise HTTPException(
             status_code=500,
             detail=f"OpenAI API error: {error_message}"
-        )
+        ) from e
+

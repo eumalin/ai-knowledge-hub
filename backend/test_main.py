@@ -1,7 +1,8 @@
-from fastapi.testclient import TestClient
-from main import app, chunk_text, cosine_similarity
 from unittest.mock import Mock, patch
-import numpy as np
+
+from fastapi.testclient import TestClient
+
+from main import app, chunk_text, cosine_similarity
 
 # Create test client with raise_server_exceptions=False to properly handle rate limiting
 client = TestClient(app, raise_server_exceptions=False)
@@ -143,7 +144,10 @@ def test_ask_rag_pipeline(mock_openai_class):
                 {
                     "id": "1",
                     "title": "Python Guide",
-                    "content": "Python is a programming language. It is very popular for data science.",
+                    "content": (
+                        "Python is a programming language. "
+                        "It is very popular for data science."
+                    ),
                     "createdAt": "2024-01-01"
                 }
             ],

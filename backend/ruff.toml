@@ -1,0 +1,49 @@
+# Ruff configuration for AI Knowledge Hub backend
+# https://docs.astral.sh/ruff/configuration/
+
+# Exclude common directories
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+]
+
+# Set line length to match common Python standards
+line-length = 100
+
+# Target Python 3.11+
+target-version = "py311"
+
+[lint]
+# Enable recommended rules
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "N",   # pep8-naming
+    "UP",  # pyupgrade (modern Python syntax)
+    "B",   # flake8-bugbear (common bugs)
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+]
+
+# Ignore specific rules if needed
+ignore = [
+    "N815",  # Allow mixedCase variable names in class scope (for JSON compatibility)
+]
+
+[lint.per-file-ignores]
+# Allow unused imports in __init__.py files
+"__init__.py" = ["F401"]
+# Allow assert statements in tests
+"test_*.py" = ["S101"]
+
+[format]
+# Use double quotes for strings
+quote-style = "double"
+
+# Indent with 4 spaces
+indent-style = "space"
