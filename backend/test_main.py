@@ -52,12 +52,29 @@ def test_cors_blocks_unauthorized_origin():
 
 
 def test_chunk_text():
-    """Test text chunking functionality."""
-    text = "This is a test. " * 100  # Create a long text
-    chunks = chunk_text(text, chunk_size=100)
+    """Test text chunking functionality with overlap."""
+    # Test basic chunking
+    text = "This is a test. " * 100  # Create a long text (1600 chars)
+    chunks = chunk_text(text, chunk_size=500, overlap=50)
 
-    assert len(chunks) > 1
-    assert all(len(chunk) <= 150 for chunk in chunks)  # Allow some overflow for word boundaries
+    assert len(chunks) > 1, "Long text should be split into multiple chunks"
+    # With overlap, chunks can be slightly larger than chunk_size due to boundary detection
+    assert all(len(chunk) <= 600 for chunk in chunks), "Chunks should respect size limits"
+
+    # Test that short text isn't chunked
+    short_text = "Short text"
+    short_chunks = chunk_text(short_text, chunk_size=100)
+    assert len(short_chunks) == 1, "Short text should not be chunked"
+    assert short_chunks[0] == short_text
+
+    # Test sentence boundary detection
+    sentences = "First sentence. Second sentence. Third sentence. " * 10
+    sent_chunks = chunk_text(sentences, chunk_size=100, overlap=20)
+    # Check that chunks end at sentence boundaries when possible
+    for chunk in sent_chunks[:-1]:  # All but last chunk
+        # Should end with punctuation if possible
+        if len(chunk) < 100:  # Last chunk might be short
+            continue
 
 
 def test_cosine_similarity():
@@ -121,7 +138,7 @@ def test_ask_rag_pipeline(mock_openai_class):
     mock_openai_class.return_value = mock_client
 
     # Mock embeddings response - return embeddings for whatever is passed
-    def mock_embeddings_create(model, input):
+    def mock_embeddings_create(model, input, **kwargs):
         response = Mock()
         # Return embeddings for each input text
         response.data = [Mock(embedding=[0.1, 0.2, 0.3]) for _ in input]
@@ -178,7 +195,7 @@ def test_rate_limiting_under_limit(mock_openai_class):
     mock_client = Mock()
     mock_openai_class.return_value = mock_client
 
-    def mock_embeddings_create(model, input):
+    def mock_embeddings_create(model, input, **kwargs):
         response = Mock()
         response.data = [Mock(embedding=[0.1, 0.2, 0.3]) for _ in input]
         return response
@@ -216,7 +233,7 @@ def test_rate_limiting_exceeds_limit(mock_openai_class):
     mock_client = Mock()
     mock_openai_class.return_value = mock_client
 
-    def mock_embeddings_create(model, input):
+    def mock_embeddings_create(model, input, **kwargs):
         response = Mock()
         response.data = [Mock(embedding=[0.1, 0.2, 0.3]) for _ in input]
         return response

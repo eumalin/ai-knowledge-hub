@@ -37,25 +37,58 @@ app.add_middleware(
 )
 
 
-def chunk_text(text: str, chunk_size: int = 500) -> list[str]:
-    """Split text into chunks of roughly chunk_size characters."""
-    words = text.split()
+def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 100) -> list[str]:
+    """
+    Split text into overlapping chunks for better context preservation.
+
+    Args:
+        text: Text to split
+        chunk_size: Target size for each chunk (default 1000 chars, optimized for embeddings)
+        overlap: Number of characters to overlap between chunks (default 100)
+
+    Returns:
+        List of text chunks with overlap
+    """
+    if len(text) <= chunk_size:
+        return [text]
+
     chunks = []
-    current_chunk = []
-    current_size = 0
+    start = 0
 
-    for word in words:
-        word_size = len(word) + 1  # +1 for space
-        if current_size + word_size > chunk_size and current_chunk:
-            chunks.append(" ".join(current_chunk))
-            current_chunk = [word]
-            current_size = word_size
-        else:
-            current_chunk.append(word)
-            current_size += word_size
+    while start < len(text):
+        # Find end position
+        end = min(start + chunk_size, len(text))
 
-    if current_chunk:
-        chunks.append(" ".join(current_chunk))
+        # If not at the very end, try to break at sentence or word boundary
+        if end < len(text):
+            # Look for sentence boundary (. ! ?) in the last portion
+            sentence_end = text.rfind(". ", start, end)
+            if sentence_end == -1:
+                sentence_end = text.rfind("! ", start, end)
+            if sentence_end == -1:
+                sentence_end = text.rfind("? ", start, end)
+
+            # If found sentence boundary in reasonable range, use it
+            if sentence_end > start + chunk_size // 2:
+                end = sentence_end + 1
+            else:
+                # Otherwise, break at word boundary
+                space_pos = text.rfind(" ", start, end)
+                if space_pos > start:
+                    end = space_pos
+
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+
+        # Move to next position
+        # If we're at the end, break; otherwise advance with overlap
+        if end >= len(text):
+            break
+
+        # Ensure we make progress even with overlap
+        next_start = max(end - overlap, start + 1)
+        start = next_start
 
     return chunks
 
@@ -71,7 +104,8 @@ def get_embeddings(client: OpenAI, texts: list[str]) -> list[list[float]]:
     """Get embeddings for a list of texts using OpenAI."""
     response = client.embeddings.create(
         model="text-embedding-ada-002",
-        input=texts
+        input=texts,
+        timeout=30.0  # 30 second timeout
     )
     return [item.embedding for item in response.data]
 
@@ -203,7 +237,8 @@ async def ask_question(
                 }
             ],
             max_tokens=500,
-            temperature=0.7
+            temperature=0.7,
+            timeout=30.0  # 30 second timeout
         )
 
         answer = response.choices[0].message.content
