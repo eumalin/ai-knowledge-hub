@@ -217,15 +217,26 @@ async def ask_question(
         )
 
     except Exception as e:
-        # Handle OpenAI errors
-        error_message = str(e)
-        if "incorrect API key" in error_message.lower() or "invalid" in error_message.lower():
+        # Handle OpenAI errors with generic messages (don't expose internal details)
+        error_message = str(e).lower()
+        if "incorrect api key" in error_message or "invalid api key" in error_message:
             raise HTTPException(
                 status_code=401,
                 detail="Invalid OpenAI API key"
             ) from e
+        if "rate limit" in error_message or "quota" in error_message:
+            raise HTTPException(
+                status_code=429,
+                detail="API rate limit exceeded. Please try again later."
+            ) from e
+        if "timeout" in error_message:
+            raise HTTPException(
+                status_code=504,
+                detail="Request timed out. Please try again."
+            ) from e
+        # Generic error message for all other failures
         raise HTTPException(
             status_code=500,
-            detail=f"OpenAI API error: {error_message}"
+            detail="Failed to process request. Please check your API key and try again."
         ) from e
 

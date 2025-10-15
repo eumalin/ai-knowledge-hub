@@ -264,3 +264,117 @@ def test_rate_limiting_health_endpoint_not_limited():
     for i in range(20):
         response = client.get("/health")
         assert response.status_code == 200, f"/health should not be rate limited (request {i})"
+
+
+@patch('main.limiter.enabled', False)
+@patch('main.OpenAI')
+def test_openai_invalid_api_key_error(mock_openai_class):
+    """Test that invalid API key errors return 401 with generic message."""
+    mock_client = Mock()
+    mock_openai_class.return_value = mock_client
+
+    # Mock OpenAI to raise invalid API key error
+    mock_client.embeddings.create.side_effect = Exception("Invalid API key provided")
+
+    response = client.post(
+        "/ask",
+        json={
+            "documents": [{
+                "id": "1",
+                "title": "Test",
+                "content": "Test content",
+                "createdAt": "2024-01-01"
+            }],
+            "question": "Test question"
+        },
+        headers={"X-API-Key": "sk-invalid-key"}
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid OpenAI API key"
+
+
+@patch('main.limiter.enabled', False)
+@patch('main.OpenAI')
+def test_openai_rate_limit_error(mock_openai_class):
+    """Test that rate limit errors return 429 with generic message."""
+    mock_client = Mock()
+    mock_openai_class.return_value = mock_client
+
+    # Mock OpenAI to raise rate limit error
+    mock_client.embeddings.create.side_effect = Exception("Rate limit exceeded")
+
+    response = client.post(
+        "/ask",
+        json={
+            "documents": [{
+                "id": "1",
+                "title": "Test",
+                "content": "Test content",
+                "createdAt": "2024-01-01"
+            }],
+            "question": "Test question"
+        },
+        headers={"X-API-Key": "sk-test-key"}
+    )
+
+    assert response.status_code == 429
+    assert "rate limit" in response.json()["detail"].lower()
+
+
+@patch('main.limiter.enabled', False)
+@patch('main.OpenAI')
+def test_openai_timeout_error(mock_openai_class):
+    """Test that timeout errors return 504 with generic message."""
+    mock_client = Mock()
+    mock_openai_class.return_value = mock_client
+
+    # Mock OpenAI to raise timeout error
+    mock_client.embeddings.create.side_effect = Exception("Request timeout")
+
+    response = client.post(
+        "/ask",
+        json={
+            "documents": [{
+                "id": "1",
+                "title": "Test",
+                "content": "Test content",
+                "createdAt": "2024-01-01"
+            }],
+            "question": "Test question"
+        },
+        headers={"X-API-Key": "sk-test-key"}
+    )
+
+    assert response.status_code == 504
+    assert "timed out" in response.json()["detail"].lower()
+
+
+@patch('main.limiter.enabled', False)
+@patch('main.OpenAI')
+def test_openai_generic_error(mock_openai_class):
+    """Test that other errors return 500 with generic message (no internal details)."""
+    mock_client = Mock()
+    mock_openai_class.return_value = mock_client
+
+    # Mock OpenAI to raise generic error
+    mock_client.embeddings.create.side_effect = Exception("Internal server error with sensitive data")
+
+    response = client.post(
+        "/ask",
+        json={
+            "documents": [{
+                "id": "1",
+                "title": "Test",
+                "content": "Test content",
+                "createdAt": "2024-01-01"
+            }],
+            "question": "Test question"
+        },
+        headers={"X-API-Key": "sk-test-key"}
+    )
+
+    assert response.status_code == 500
+    # Should not expose internal error details
+    assert "sensitive data" not in response.json()["detail"].lower()
+    assert "Failed to process request" in response.json()["detail"]
