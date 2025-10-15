@@ -375,7 +375,9 @@ def test_openai_generic_error(mock_openai_class):
     mock_openai_class.return_value = mock_client
 
     # Mock OpenAI to raise generic error
-    mock_client.embeddings.create.side_effect = Exception("Internal server error with sensitive data")
+    mock_client.embeddings.create.side_effect = Exception(
+        "Internal server error with sensitive data"
+    )
 
     response = client.post(
         "/ask",
