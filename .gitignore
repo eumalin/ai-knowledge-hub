@@ -58,3 +58,7 @@ yarn-error.log*
 
 # Logs
 *.log
+
+# Project documentation (local only)
+CLAUDE.md
+INSTRUCTIONS.md
