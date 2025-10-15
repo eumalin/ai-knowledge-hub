@@ -126,8 +126,14 @@ describe('App - API Key', () => {
     localStorage.clear();
   });
 
-  it('renders API key input', () => {
+  it('renders API key input when settings are expanded', async () => {
+    const user = userEvent.setup();
     render(<App />);
+
+    // Click settings gear to expand
+    const settingsButton = screen.getByLabelText('Toggle settings');
+    await user.click(settingsButton);
+
     expect(screen.getByText('OpenAI API Key')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('sk-...')).toBeInTheDocument();
   });
@@ -135,6 +141,10 @@ describe('App - API Key', () => {
   it('validates API key format', async () => {
     const user = userEvent.setup();
     render(<App />);
+
+    // Expand settings
+    const settingsButton = screen.getByLabelText('Toggle settings');
+    await user.click(settingsButton);
 
     const apiKeyInput = screen.getByPlaceholderText('sk-...');
 
@@ -152,21 +162,29 @@ describe('App - API Key', () => {
     const user = userEvent.setup();
     render(<App />);
 
+    // Expand settings
+    const settingsButton = screen.getByLabelText('Toggle settings');
+    await user.click(settingsButton);
+
     const apiKeyInput = screen.getByPlaceholderText('sk-...') as HTMLInputElement;
-    const toggleButton = screen.getByRole('button', { name: /show/i });
+    const toggleButton = screen.getByLabelText('Show API key');
 
     expect(apiKeyInput.type).toBe('password');
 
     await user.click(toggleButton);
     expect(apiKeyInput.type).toBe('text');
 
-    await user.click(screen.getByRole('button', { name: /hide/i }));
+    await user.click(screen.getByLabelText('Hide API key'));
     expect(apiKeyInput.type).toBe('password');
   });
 
   it('persists API key to localStorage', async () => {
     const user = userEvent.setup();
     const { unmount } = render(<App />);
+
+    // Expand settings
+    const settingsButton = screen.getByLabelText('Toggle settings');
+    await user.click(settingsButton);
 
     const apiKeyInput = screen.getByPlaceholderText('sk-...');
     await user.type(apiKeyInput, 'sk-persistent-key');
@@ -175,6 +193,10 @@ describe('App - API Key', () => {
 
     // Re-render and check if API key is still there
     render(<App />);
+    // Expand settings again
+    const settingsButton2 = screen.getByLabelText('Toggle settings');
+    await user.click(settingsButton2);
+
     expect(screen.getByDisplayValue('sk-persistent-key')).toBeInTheDocument();
   });
 });

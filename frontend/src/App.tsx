@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Chat from './Chat';
 import ViewDocumentModal from './ViewDocumentModal';
 import DocumentForm from './DocumentForm';
+import Settings from './Settings';
 
 interface Document {
   id: string;
@@ -34,7 +35,6 @@ function App() {
   const [apiKey, setApiKey] = useState(() => {
     return localStorage.getItem(API_KEY_STORAGE_KEY) || '';
   });
-  const [showApiKey, setShowApiKey] = useState(false);
   const [apiKeyError, setApiKeyError] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -71,8 +71,7 @@ function App() {
     return true;
   };
 
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newKey = e.target.value;
+  const handleApiKeyChange = (newKey: string) => {
     setApiKey(newKey);
     if (newKey.trim()) {
       validateApiKey(newKey);
@@ -302,41 +301,12 @@ function App() {
           </p>
         </div>
 
-        {/* API Key Input */}
-        <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6 mb-6">
-          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">
-            OpenAI API Key
-          </h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Your API key is stored locally in your browser and sent directly to OpenAI. We never store your API key on our servers.
-          </p>
-          <div className="relative">
-            <input
-              type={showApiKey ? 'text' : 'password'}
-              value={apiKey}
-              onChange={handleApiKeyChange}
-              placeholder="sk-..."
-              className={`w-full px-3 py-2 pr-24 border rounded-md focus:outline-none focus:ring-2 ${
-                apiKeyError
-                  ? 'border-red-500 focus:ring-red-500'
-                  : 'border-gray-300 focus:ring-blue-500'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowApiKey(!showApiKey)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600 hover:text-gray-800 px-3 py-1 rounded hover:bg-gray-100 transition-colors"
-            >
-              {showApiKey ? 'Hide' : 'Show'}
-            </button>
-          </div>
-          {apiKeyError && (
-            <p className="text-red-600 text-sm mt-2">{apiKeyError}</p>
-          )}
-          {apiKey && !apiKeyError && (
-            <p className="text-green-600 text-sm mt-2">✓ Valid API key format</p>
-          )}
-        </div>
+        {/* Settings */}
+        <Settings
+          apiKey={apiKey}
+          onApiKeyChange={handleApiKeyChange}
+          apiKeyError={apiKeyError}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Document Input Form */}
