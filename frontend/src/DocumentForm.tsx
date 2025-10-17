@@ -12,7 +12,7 @@ interface DocumentFormProps {
 const MAX_TITLE_LENGTH = 100;
 const MAX_CONTENT_LENGTH = 50000;
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
-const ALLOWED_FILE_EXTENSIONS = ['.txt', '.md', '.json', '.csv', '.html', '.xml', '.log'];
+const ALLOWED_FILE_EXTENSIONS = ['.txt', '.md', '.json', '.csv', '.html', '.xml', '.log', '.pdf'];
 
 function DocumentForm({
   title,

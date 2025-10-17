@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
@@ -213,7 +213,7 @@ describe('App - File Upload', () => {
 
     // Verify the file input has the accept attribute to filter files in the picker
     const fileInput = document.querySelector('#file-upload') as HTMLInputElement;
-    expect(fileInput).toHaveAttribute('accept', '.txt,.md,.json,.csv,.html,.xml,.log');
+    expect(fileInput).toHaveAttribute('accept', '.txt,.md,.json,.csv,.html,.xml,.log,.pdf');
   });
 
   it('uploads a valid text file', async () => {
@@ -282,5 +282,75 @@ describe('App - File Upload', () => {
     await waitFor(() => {
       expect(screen.getByDisplayValue('test')).toBeInTheDocument();
     });
+  });
+
+  it('uploads and parses a PDF file', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    // Mock pdfjs-dist module
+    const mockPdf = {
+      numPages: 2,
+      getPage: vi.fn()
+    };
+
+    const mockPage1 = {
+      getTextContent: vi.fn().mockResolvedValue({
+        items: [
+          { str: 'This' },
+          { str: 'is' },
+          { str: 'page' },
+          { str: 'one' },
+          { str: 'content' }
+        ]
+      })
+    };
+
+    const mockPage2 = {
+      getTextContent: vi.fn().mockResolvedValue({
+        items: [
+          { str: 'This' },
+          { str: 'is' },
+          { str: 'page' },
+          { str: 'two' },
+          { str: 'content' }
+        ]
+      })
+    };
+
+    mockPdf.getPage.mockImplementation((pageNum: number) => {
+      if (pageNum === 1) return Promise.resolve(mockPage1);
+      if (pageNum === 2) return Promise.resolve(mockPage2);
+      return Promise.reject(new Error('Invalid page'));
+    });
+
+    const mockGetDocument = vi.fn().mockReturnValue({
+      promise: Promise.resolve(mockPdf)
+    });
+
+    vi.doMock('pdfjs-dist', () => ({
+      getDocument: mockGetDocument,
+      GlobalWorkerOptions: { workerSrc: '' }
+    }));
+
+    // Create a mock PDF file with arrayBuffer method
+    const pdfContent = new ArrayBuffer(100);
+    const file = new File([pdfContent], 'sample-document.pdf', { type: 'application/pdf' });
+
+    // Mock the arrayBuffer method
+    file.arrayBuffer = vi.fn().mockResolvedValue(pdfContent);
+
+    const fileInput = screen.getByLabelText(/Click to upload/i) as HTMLInputElement;
+    await user.upload(fileInput, file);
+
+    // Wait for PDF parsing to complete and populate fields
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('sample-document')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Check that content from both pages was extracted
+    const contentField = screen.getByLabelText('Document Content') as HTMLTextAreaElement;
+    expect(contentField.value).toContain('This is page one content');
+    expect(contentField.value).toContain('This is page two content');
   });
 });

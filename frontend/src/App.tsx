@@ -23,8 +23,9 @@ const ALLOWED_FILE_TYPES = [
   'text/csv',
   'text/html',
   'text/xml',
+  'application/pdf',
 ];
-const ALLOWED_FILE_EXTENSIONS = ['.txt', '.md', '.json', '.csv', '.html', '.xml', '.log'];
+const ALLOWED_FILE_EXTENSIONS = ['.txt', '.md', '.json', '.csv', '.html', '.xml', '.log', '.pdf'];
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 function App() {
@@ -234,7 +235,7 @@ function App() {
     e.target.value = '';
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -258,7 +259,53 @@ function App() {
       return;
     }
 
-    // Read file content
+    // Handle PDF files
+    if (file.type === 'application/pdf' || fileExtension === '.pdf') {
+      try {
+        const pdfjs = await import('pdfjs-dist');
+
+        // Set up the worker using the bundled version
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+          'pdfjs-dist/build/pdf.worker.mjs',
+          import.meta.url
+        ).toString();
+
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+
+        let fullText = '';
+
+        // Extract text from all pages
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items
+            .map((item: any) => item.str)
+            .join(' ');
+          fullText += pageText + '\n';
+        }
+
+        if (fullText.length > MAX_CONTENT_LENGTH) {
+          setFileError(`File content must be less than ${MAX_CONTENT_LENGTH.toLocaleString()} characters`);
+          return;
+        }
+
+        // Extract filename without extension as title
+        const fileName = file.name.replace(/\.[^/.]+$/, '');
+        setTitle(fileName.slice(0, MAX_TITLE_LENGTH));
+        setContent(fullText.trim());
+        setErrors({ title: '', content: '' });
+      } catch (error) {
+        setFileError('Failed to parse PDF file. Please try a different file.');
+        console.error('PDF parsing error:', error);
+      }
+
+      // Reset the file input
+      e.target.value = '';
+      return;
+    }
+
+    // Read text files
     const reader = new FileReader();
     reader.onload = (event) => {
       const fileContent = event.target?.result as string;
