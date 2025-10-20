@@ -4,7 +4,7 @@
 
 A simple, secure AI Q&A platform. Paste your documents, ask questions, and get intelligent AI responses using your own OpenAI API key.
 
-<img width="882" height="1109" alt="image" src="https://github.com/user-attachments/assets/4ea5f772-cf7f-4f97-83ab-4454aa3b2466" />
+https://github.com/user-attachments/assets/a5d87173-e6ae-449d-9f11-83ed9f3e4bc9
 
 ## 🚀 Features
 - **Client-side document management** - Paste text documents, stored locally in browser
