@@ -6,7 +6,7 @@ A simple, secure AI Q&A platform. Paste your documents, ask questions, and get i
 
 https://github.com/user-attachments/assets/a5d87173-e6ae-449d-9f11-83ed9f3e4bc9
 
-## 🚀 Features
+## Features
 - **Client-side document management** - Paste text documents, stored locally in browser
 - **AI-powered Q&A** - Ask questions, get context-aware answers using RAG (Retrieval-Augmented Generation)
 - **User-provided API keys** - Bring your own OpenAI API key, stored securely in browser
@@ -27,12 +27,12 @@ https://github.com/user-attachments/assets/a5d87173-e6ae-449d-9f11-83ed9f3e4bc9
 
 ## 🏗 Architecture
 
-**Simplified MVP Design:**
-- ✅ No database - documents stored client-side only
-- ✅ No file uploads - text input only
-- ✅ Stateless backend - only processes AI requests
+**Simplified Design:**
+- No database - documents stored client-side only
+- No file uploads - text input only
+- Stateless backend - only processes AI requests
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+
